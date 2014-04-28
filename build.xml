@@ -1,0 +1,23 @@
+<project name="TestASM" default="dist" basedir=".">
+    <description>
+        TestASM
+    </description>
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="asm"  location="vendor/asm-all-5.0.2.jar"/>
+
+  <target name="compile" description="compile the source" >
+    <javac srcdir="${src}" destdir="${build}" classpath="${asm}" includeantruntime="false">
+       <compilerarg value="-Xlint"/>
+    </javac>
+  </target>
+
+  <target name="run" description="run the example" >
+    <java classname="fr.yimgo.testasm.TestASM" fork="true">
+      <classpath>
+       <pathelement location="${asm}"/>
+       <pathelement path="${build}"/>
+     </classpath>
+    </java>
+  </target>
+</project>
