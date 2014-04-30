@@ -20,5 +20,26 @@ public class TestASM {
 
     ClassPimp cp = new ClassPimp();
     cp.transform(cn);
+
+    ClassReader cr2 = new ClassReader("fr.yimgo.testasm.ParallelSqrt");
+    ClassNode cn2 = new ClassNode();
+
+    cr2.accept(cn2, 0);
+
+    ClassPimp cp2 = new ClassPimp();
+    cp2.transform(cn2);
+
+    ClassWriter cw = new ClassWriter(0);
+    cn.accept(cw);
+
+    MyClassLoader cl = new MyClassLoader();
+    Class c = cl.defineClass("fr.yimgo.testasm.ParallelizedSqrt", cw.toByteArray());    
+    System.out.println(c.getMethod("sequential_sqrt", int.class).invoke(null, 10));
+  }
+}
+
+class MyClassLoader extends ClassLoader {
+  public Class defineClass(String name, byte[] b) {
+    return defineClass(name, b, 0, b.length);
   }
 }

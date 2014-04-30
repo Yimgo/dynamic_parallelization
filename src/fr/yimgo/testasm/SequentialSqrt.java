@@ -5,18 +5,18 @@ import java.util.ArrayList;
 
 public class SequentialSqrt {
 
-  public static List<Double> sequential_sqrt(int n) {
-    List<Double> list = new ArrayList<Double>();
+  public static double sequential_sqrt(int n) {
+    double sum = 0;
 
     for (int i = 0; i < n; i += 1) {
-      list.add(Math.sqrt(i));
+      sum += Math.sqrt(i);
     }
 
-    return list;
+    return sum;
   }
 
   public static void main(String... args) throws Throwable {
-    //System.out.println(sequential_sqrt(new Integer(args[0])));
+    System.out.println(sequential_sqrt(new Integer(args[0])));
     long computation_time = System.nanoTime();
     sequential_sqrt(new Integer(args[0]));
     computation_time = System.nanoTime() - computation_time;

@@ -1,0 +1,29 @@
+  public static double sequential_sqrt(int);
+    descriptor: (I)D
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=4, locals=4, args_size=1
+         0: dconst_0      
+         1: dstore_1      
+         2: iconst_0      
+         3: istore_3      
+         4: iload_3       
+         5: iload_0       
+         6: if_icmpge     23
+         9: dload_1       
+        10: iload_3       
+        11: i2d           
+        12: invokestatic  #2                  // Method java/lang/Math.sqrt:(D)D
+        15: dadd          
+        16: dstore_1      
+        17: iinc          3, 1
+        20: goto          4
+        23: dload_1       
+        24: dreturn       
+      StackMapTable: number_of_entries = 2
+           frame_type = 253 /* append */
+          offset_delta = 4
+          locals = [ double, int ]
+             frame_type = 250 /* chop */
+            offset_delta = 18
+

@@ -1,0 +1,63 @@
+  public static double parallel_sqrt(int) throws java.lang.Throwable;
+    descriptor: (I)D
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=5, locals=6, args_size=1
+         0: dconst_0      
+         1: dstore_1      
+         2: new           #2                  // class java/util/ArrayList
+         5: dup           
+         6: invokespecial #3                  // Method java/util/ArrayList."<init>":()V
+         9: astore_3      
+        10: iconst_0      
+        11: istore        4
+        13: iload         4
+        15: iload_0       
+        16: if_icmpge     53
+        19: iload         4
+        21: istore        5
+        23: aload_3       
+        24: getstatic     #4                  // Field pool:Ljava/util/concurrent/ExecutorService;
+        27: new           #5                  // class fr/yimgo/testasm/ParallelSqrt$1
+        30: dup           
+        31: iload         5
+        33: invokespecial #6                  // Method fr/yimgo/testasm/ParallelSqrt$1."<init>":(I)V
+        36: invokeinterface #7,  2            // InterfaceMethod java/util/concurrent/ExecutorService.submit:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+        41: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        46: pop           
+        47: iinc          4, 1
+        50: goto          13
+        53: aload_3       
+        54: invokeinterface #9,  1            // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+        59: astore        4
+        61: aload         4
+        63: invokeinterface #10,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
+        68: ifeq          102
+        71: aload         4
+        73: invokeinterface #11,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        78: checkcast     #12                 // class java/util/concurrent/Future
+        81: astore        5
+        83: dload_1       
+        84: aload         5
+        86: invokeinterface #13,  1           // InterfaceMethod java/util/concurrent/Future.get:()Ljava/lang/Object;
+        91: checkcast     #14                 // class java/lang/Double
+        94: invokevirtual #15                 // Method java/lang/Double.doubleValue:()D
+        97: dadd          
+        98: dstore_1      
+        99: goto          61
+       102: dload_1       
+       103: dreturn       
+      StackMapTable: number_of_entries = 4
+           frame_type = 254 /* append */
+          offset_delta = 13
+          locals = [ double, class java/util/List, int ]
+             frame_type = 250 /* chop */
+            offset_delta = 39
+             frame_type = 252 /* append */
+            offset_delta = 7
+            locals = [ class java/util/Iterator ]
+               frame_type = 250 /* chop */
+              offset_delta = 40
+
+        Exceptions:
+          throws java.lang.Throwable
