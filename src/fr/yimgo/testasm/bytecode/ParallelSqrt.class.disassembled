@@ -1,63 +1,228 @@
-  public static double parallel_sqrt(int) throws java.lang.Throwable;
-    descriptor: (I)D
+// javap -c -p -s -l -verbose build/fr/yimgo/testasm/ParallelSqrt.class
+Classfile /home/guillaume/devel/Yimgo/test_asm/build/fr/yimgo/testasm/ParallelSqrt.class
+  Last modified May 6, 2014; size 1552 bytes
+  MD5 checksum 7cf7b1e0a9f4c275c3d758f77150047a
+public class fr.yimgo.testasm.ParallelSqrt
+  InnerClasses:
+       static #7; //class fr/yimgo/testasm/ParallelSqrt$1
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+    #1 = Methodref          #27.#44       //  java/lang/Object."<init>":()V
+    #2 = Class              #45           //  java/lang/Double
+    #3 = Methodref          #2.#46        //  java/lang/Double."<init>":(D)V
+    #4 = Class              #47           //  java/util/ArrayList
+    #5 = Methodref          #4.#44        //  java/util/ArrayList."<init>":()V
+    #6 = Fieldref           #26.#48       //  fr/yimgo/testasm/ParallelSqrt.pool:Ljava/util/concurrent/ExecutorService;
+    #7 = Class              #49           //  fr/yimgo/testasm/ParallelSqrt$1
+    #8 = Methodref          #7.#50        //  fr/yimgo/testasm/ParallelSqrt$1."<init>":(I)V
+    #9 = InterfaceMethodref #51.#52       //  java/util/concurrent/ExecutorService.submit:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+   #10 = InterfaceMethodref #53.#54       //  java/util/List.add:(Ljava/lang/Object;)Z
+   #11 = InterfaceMethodref #53.#55       //  java/util/List.iterator:()Ljava/util/Iterator;
+   #12 = InterfaceMethodref #56.#57       //  java/util/Iterator.hasNext:()Z
+   #13 = InterfaceMethodref #56.#58       //  java/util/Iterator.next:()Ljava/lang/Object;
+   #14 = Class              #59           //  java/util/concurrent/Future
+   #15 = Methodref          #2.#60        //  java/lang/Double.doubleValue:()D
+   #16 = InterfaceMethodref #14.#61       //  java/util/concurrent/Future.get:()Ljava/lang/Object;
+   #17 = Methodref          #2.#62        //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
+   #18 = Methodref          #63.#64       //  java/util/concurrent/Executors.newFixedThreadPool:(I)Ljava/util/concurrent/ExecutorService;
+   #19 = Fieldref           #65.#66       //  java/lang/System.out:Ljava/io/PrintStream;
+   #20 = Class              #67           //  java/lang/Integer
+   #21 = Methodref          #20.#68       //  java/lang/Integer."<init>":(Ljava/lang/String;)V
+   #22 = Methodref          #20.#69       //  java/lang/Integer.intValue:()I
+   #23 = Methodref          #26.#70       //  fr/yimgo/testasm/ParallelSqrt.parallel_sqrt:(I)Ljava/lang/Double;
+   #24 = Methodref          #71.#72       //  java/io/PrintStream.println:(Ljava/lang/Object;)V
+   #25 = InterfaceMethodref #51.#73       //  java/util/concurrent/ExecutorService.shutdown:()V
+   #26 = Class              #74           //  fr/yimgo/testasm/ParallelSqrt
+   #27 = Class              #75           //  java/lang/Object
+   #28 = Utf8               InnerClasses
+   #29 = Utf8               pool
+   #30 = Utf8               Ljava/util/concurrent/ExecutorService;
+   #31 = Utf8               <init>
+   #32 = Utf8               ()V
+   #33 = Utf8               Code
+   #34 = Utf8               parallel_sqrt
+   #35 = Utf8               (I)Ljava/lang/Double;
+   #36 = Utf8               StackMapTable
+   #37 = Class              #45           //  java/lang/Double
+   #38 = Class              #76           //  java/util/List
+   #39 = Class              #77           //  java/util/Iterator
+   #40 = Utf8               Exceptions
+   #41 = Class              #78           //  java/lang/Throwable
+   #42 = Utf8               main
+   #43 = Utf8               ([Ljava/lang/String;)V
+   #44 = NameAndType        #31:#32       //  "<init>":()V
+   #45 = Utf8               java/lang/Double
+   #46 = NameAndType        #31:#79       //  "<init>":(D)V
+   #47 = Utf8               java/util/ArrayList
+   #48 = NameAndType        #29:#30       //  pool:Ljava/util/concurrent/ExecutorService;
+   #49 = Utf8               fr/yimgo/testasm/ParallelSqrt$1
+   #50 = NameAndType        #31:#80       //  "<init>":(I)V
+   #51 = Class              #81           //  java/util/concurrent/ExecutorService
+   #52 = NameAndType        #82:#83       //  submit:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+   #53 = Class              #76           //  java/util/List
+   #54 = NameAndType        #84:#85       //  add:(Ljava/lang/Object;)Z
+   #55 = NameAndType        #86:#87       //  iterator:()Ljava/util/Iterator;
+   #56 = Class              #77           //  java/util/Iterator
+   #57 = NameAndType        #88:#89       //  hasNext:()Z
+   #58 = NameAndType        #90:#91       //  next:()Ljava/lang/Object;
+   #59 = Utf8               java/util/concurrent/Future
+   #60 = NameAndType        #92:#93       //  doubleValue:()D
+   #61 = NameAndType        #94:#91       //  get:()Ljava/lang/Object;
+   #62 = NameAndType        #95:#96       //  valueOf:(D)Ljava/lang/Double;
+   #63 = Class              #97           //  java/util/concurrent/Executors
+   #64 = NameAndType        #98:#99       //  newFixedThreadPool:(I)Ljava/util/concurrent/ExecutorService;
+   #65 = Class              #100          //  java/lang/System
+   #66 = NameAndType        #101:#102     //  out:Ljava/io/PrintStream;
+   #67 = Utf8               java/lang/Integer
+   #68 = NameAndType        #31:#103      //  "<init>":(Ljava/lang/String;)V
+   #69 = NameAndType        #104:#105     //  intValue:()I
+   #70 = NameAndType        #34:#35       //  parallel_sqrt:(I)Ljava/lang/Double;
+   #71 = Class              #106          //  java/io/PrintStream
+   #72 = NameAndType        #107:#108     //  println:(Ljava/lang/Object;)V
+   #73 = NameAndType        #109:#32      //  shutdown:()V
+   #74 = Utf8               fr/yimgo/testasm/ParallelSqrt
+   #75 = Utf8               java/lang/Object
+   #76 = Utf8               java/util/List
+   #77 = Utf8               java/util/Iterator
+   #78 = Utf8               java/lang/Throwable
+   #79 = Utf8               (D)V
+   #80 = Utf8               (I)V
+   #81 = Utf8               java/util/concurrent/ExecutorService
+   #82 = Utf8               submit
+   #83 = Utf8               (Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+   #84 = Utf8               add
+   #85 = Utf8               (Ljava/lang/Object;)Z
+   #86 = Utf8               iterator
+   #87 = Utf8               ()Ljava/util/Iterator;
+   #88 = Utf8               hasNext
+   #89 = Utf8               ()Z
+   #90 = Utf8               next
+   #91 = Utf8               ()Ljava/lang/Object;
+   #92 = Utf8               doubleValue
+   #93 = Utf8               ()D
+   #94 = Utf8               get
+   #95 = Utf8               valueOf
+   #96 = Utf8               (D)Ljava/lang/Double;
+   #97 = Utf8               java/util/concurrent/Executors
+   #98 = Utf8               newFixedThreadPool
+   #99 = Utf8               (I)Ljava/util/concurrent/ExecutorService;
+  #100 = Utf8               java/lang/System
+  #101 = Utf8               out
+  #102 = Utf8               Ljava/io/PrintStream;
+  #103 = Utf8               (Ljava/lang/String;)V
+  #104 = Utf8               intValue
+  #105 = Utf8               ()I
+  #106 = Utf8               java/io/PrintStream
+  #107 = Utf8               println
+  #108 = Utf8               (Ljava/lang/Object;)V
+  #109 = Utf8               shutdown
+{
+  protected static java.util.concurrent.ExecutorService pool;
+    descriptor: Ljava/util/concurrent/ExecutorService;
+    flags: ACC_PROTECTED, ACC_STATIC
+
+
+  public fr.yimgo.testasm.ParallelSqrt();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0       
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return        
+
+  public static java.lang.Double parallel_sqrt(int) throws java.lang.Throwable;
+    descriptor: (I)Ljava/lang/Double;
     flags: ACC_PUBLIC, ACC_STATIC
     Code:
-      stack=5, locals=6, args_size=1
-         0: dconst_0      
-         1: dstore_1      
-         2: new           #2                  // class java/util/ArrayList
-         5: dup           
-         6: invokespecial #3                  // Method java/util/ArrayList."<init>":()V
-         9: astore_3      
-        10: iconst_0      
-        11: istore        4
-        13: iload         4
-        15: iload_0       
-        16: if_icmpge     53
-        19: iload         4
-        21: istore        5
-        23: aload_3       
-        24: getstatic     #4                  // Field pool:Ljava/util/concurrent/ExecutorService;
-        27: new           #5                  // class fr/yimgo/testasm/ParallelSqrt$1
-        30: dup           
-        31: iload         5
-        33: invokespecial #6                  // Method fr/yimgo/testasm/ParallelSqrt$1."<init>":(I)V
-        36: invokeinterface #7,  2            // InterfaceMethod java/util/concurrent/ExecutorService.submit:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
-        41: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-        46: pop           
-        47: iinc          4, 1
-        50: goto          13
-        53: aload_3       
-        54: invokeinterface #9,  1            // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
-        59: astore        4
-        61: aload         4
-        63: invokeinterface #10,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
-        68: ifeq          102
-        71: aload         4
-        73: invokeinterface #11,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
-        78: checkcast     #12                 // class java/util/concurrent/Future
-        81: astore        5
-        83: dload_1       
-        84: aload         5
-        86: invokeinterface #13,  1           // InterfaceMethod java/util/concurrent/Future.get:()Ljava/lang/Object;
-        91: checkcast     #14                 // class java/lang/Double
-        94: invokevirtual #15                 // Method java/lang/Double.doubleValue:()D
-        97: dadd          
-        98: dstore_1      
-        99: goto          61
-       102: dload_1       
-       103: dreturn       
+      stack=5, locals=5, args_size=1
+         0: new           #2                  // class java/lang/Double
+         3: dup           
+         4: dconst_0      
+         5: invokespecial #3                  // Method java/lang/Double."<init>":(D)V
+         8: astore_1      
+         9: new           #4                  // class java/util/ArrayList
+        12: dup           
+        13: invokespecial #5                  // Method java/util/ArrayList."<init>":()V
+        16: astore_2      
+        17: iconst_0      
+        18: istore_3      
+        19: iload_3       
+        20: iload_0       
+        21: if_icmpge     57
+        24: iload_3       
+        25: istore        4
+        27: aload_2       
+        28: getstatic     #6                  // Field pool:Ljava/util/concurrent/ExecutorService;
+        31: new           #7                  // class fr/yimgo/testasm/ParallelSqrt$1
+        34: dup           
+        35: iload         4
+        37: invokespecial #8                  // Method fr/yimgo/testasm/ParallelSqrt$1."<init>":(I)V
+        40: invokeinterface #9,  2            // InterfaceMethod java/util/concurrent/ExecutorService.submit:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+        45: invokeinterface #10,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        50: pop           
+        51: iinc          3, 1
+        54: goto          19
+        57: aload_2       
+        58: invokeinterface #11,  1           // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+        63: astore_3      
+        64: aload_3       
+        65: invokeinterface #12,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
+        70: ifeq          109
+        73: aload_3       
+        74: invokeinterface #13,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        79: checkcast     #14                 // class java/util/concurrent/Future
+        82: astore        4
+        84: aload_1       
+        85: invokevirtual #15                 // Method java/lang/Double.doubleValue:()D
+        88: aload         4
+        90: invokeinterface #16,  1           // InterfaceMethod java/util/concurrent/Future.get:()Ljava/lang/Object;
+        95: checkcast     #2                  // class java/lang/Double
+        98: invokevirtual #15                 // Method java/lang/Double.doubleValue:()D
+       101: dadd          
+       102: invokestatic  #17                 // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
+       105: astore_1      
+       106: goto          64
+       109: aload_1       
+       110: areturn       
       StackMapTable: number_of_entries = 4
            frame_type = 254 /* append */
-          offset_delta = 13
-          locals = [ double, class java/util/List, int ]
+          offset_delta = 19
+          locals = [ class java/lang/Double, class java/util/List, int ]
              frame_type = 250 /* chop */
-            offset_delta = 39
+            offset_delta = 37
              frame_type = 252 /* append */
-            offset_delta = 7
+            offset_delta = 6
             locals = [ class java/util/Iterator ]
                frame_type = 250 /* chop */
-              offset_delta = 40
+              offset_delta = 44
 
         Exceptions:
           throws java.lang.Throwable
+
+      public static void main(java.lang.String...) throws java.lang.Throwable;
+        descriptor: ([Ljava/lang/String;)V
+        flags: ACC_PUBLIC, ACC_STATIC, ACC_VARARGS
+        Code:
+          stack=5, locals=1, args_size=1
+             0: iconst_2      
+             1: invokestatic  #18                 // Method java/util/concurrent/Executors.newFixedThreadPool:(I)Ljava/util/concurrent/ExecutorService;
+             4: putstatic     #6                  // Field pool:Ljava/util/concurrent/ExecutorService;
+             7: getstatic     #19                 // Field java/lang/System.out:Ljava/io/PrintStream;
+            10: new           #20                 // class java/lang/Integer
+            13: dup           
+            14: aload_0       
+            15: iconst_0      
+            16: aaload        
+            17: invokespecial #21                 // Method java/lang/Integer."<init>":(Ljava/lang/String;)V
+            20: invokevirtual #22                 // Method java/lang/Integer.intValue:()I
+            23: invokestatic  #23                 // Method parallel_sqrt:(I)Ljava/lang/Double;
+            26: invokevirtual #24                 // Method java/io/PrintStream.println:(Ljava/lang/Object;)V
+            29: getstatic     #6                  // Field pool:Ljava/util/concurrent/ExecutorService;
+            32: invokeinterface #25,  1           // InterfaceMethod java/util/concurrent/ExecutorService.shutdown:()V
+            37: return        
+        Exceptions:
+          throws java.lang.Throwable
+    }
