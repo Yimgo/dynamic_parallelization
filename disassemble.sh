@@ -17,7 +17,7 @@ function disassemble {
 
 if [[ -n ${1} ]]; then
   disassemble ${1}
-else  
+else
   readonly classes=("ParallelSqrt.class" "ParallelSqrt\$1.class" "SequentialSqrt.class")
   for i in "${classes[@]}";
   do
