@@ -1,39 +1,46 @@
 package fr.yimgo.testasm;
 
 import java.util.Arrays;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.tree.ClassNode;
+import java.util.ListIterator;
+/* ugly, fix this asap */
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
 public class TestASM {
-  public static void main(String... args) throws Throwable {
-    /*ClassWriter cw = new ClassWriter(0);
-    ClassPrinter cp = new ClassPrinter((ClassVisitor)cw);
-    ClassReader cr = new ClassReader("fr.yimgo.testasm.SequentialSqrt");
-    cr.accept(cp, 0);
-    System.out.println(Arrays.toString(cw.toByteArray()));*/
-    ClassReader cr = new ClassReader("fr.yimgo.testasm.SequentialSqrt");
+  static public ClassNode createTestClass() {
     ClassNode cn = new ClassNode();
 
-    cr.accept(cn, 0);
+    /* standard attributes */
+    cn.version = Opcodes.V1_8;
+    cn.access = Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER;
+    cn.name = "fr/yimgo/testasm/Test";
+    cn.superName = "java/lang/Object";
 
-    ClassPimp cp = new ClassPimp();
-    cp.transform(cn);
+    /* constructor */
+    MethodNode constructorNode = new MethodNode(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+    constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    constructorNode.instructions.add(new InsnNode(Opcodes.DUP));
+    constructorNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
+    constructorNode.instructions.add(new InsnNode(Opcodes.RETURN));
+    constructorNode.maxStack = 2;
+    constructorNode.maxLocals = 1;
+    cn.methods.add(constructorNode);
 
-    ClassReader cr2 = new ClassReader("fr.yimgo.testasm.ParallelSqrt");
-    ClassNode cn2 = new ClassNode();
-
-    cr2.accept(cn2, 0);
-
-    ClassPimp cp2 = new ClassPimp();
-    cp2.transform(cn2);
-
+    return cn;
+  }
+  public static void main(String... args) {
     ClassWriter cw = new ClassWriter(0);
-    cn.accept(cw);
+    createTestClass().accept(cw);
+    MyClassLoader cl = MyClassLoader.getInstance();
 
-    MyClassLoader cl = new MyClassLoader();
-    Class c = cl.defineClass("fr.yimgo.testasm.SequentialSqrt_Parallelized", cw.toByteArray());
-    System.out.println(c.getMethod("sequential_sqrt", int.class).invoke(null, 10));
+    try {
+        Class<Object> c = cl.defineClass("fr.yimgo.testasm.Test", cw.toByteArray());
+        Object test = c.newInstance();
+        System.out.println(c);
+        System.out.println(test);
+    } catch (Throwable t) {
+        System.err.println(t);
+        t.printStackTrace(System.err);
+    }
   }
 }
