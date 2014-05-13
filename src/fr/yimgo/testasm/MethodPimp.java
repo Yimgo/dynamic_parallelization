@@ -13,6 +13,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.IincInsnNode;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import java.util.concurrent.Callable;
@@ -20,7 +21,7 @@ import java.util.concurrent.Callable;
 public class MethodPimp {
   public MethodPimp() { }
 
-  public void transform(MethodNode mn, String className) throws Throwable {
+  public void transform(MethodNode mn, String className) {
     AbstractInsnNode beforeLoop = null, loopStart = null, loopEnd = null, afterLoop = null;
 
     System.out.println("Original instructions:");
@@ -60,11 +61,13 @@ public class MethodPimp {
 
     /* insert pre-loop instructions before label1 */
     transformInit(mn, 0, mn.instructions.indexOf(beforeLoop));
+    transformInnerLoop(className, mn, mn.instructions.indexOf(loopStart), mn.instructions.indexOf(loopEnd));
+
     System.out.println("Pimped instructions:");
     printOpcodes(mn.instructions);
 
     try {ClassWriter cw = new ClassWriter(0);
-    createInnerClass(className, mn.instructions, 0, 0).accept(cw);
+    createInnerClass(className, mn, 0, 0).accept(cw);
 
     MyClassLoader cl = new MyClassLoader();
     Class c = cl.defineClass("fr.yimgo.testasm.SequentialSqrt_Parallelized$1", cw.toByteArray());
@@ -75,31 +78,62 @@ public class MethodPimp {
     }
   }
 
-  /*
-    @returns {int} the number of local variables added.
-  */
-  public int transformInit(MethodNode mn, int begin, int end) {
-    int localVariables = 0;
+  public void transformInit(MethodNode mn, int begin, int end) {
     System.out.println("Initialization from " + begin + " to " + end);
-    @SuppressWarnings("unchecked") ListIterator<AbstractInsnNode> i = mn.instructions.iterator(end);
+    @SuppressWarnings("unchecked") ListIterator<AbstractInsnNode> i = mn.instructions.iterator(begin);
     /*
       = List<Future<Double>> futures = new ArrayList<Future<Double>>();
     */
     i.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
     i.add(new InsnNode(Opcodes.DUP));
     i.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
-    i.add(new VarInsnNode(Opcodes.ASTORE, 4));
-    mn.maxLocals += 2;
-    mn.maxStack += 1;
+    i.add(new VarInsnNode(Opcodes.ASTORE, 3));
+    mn.maxLocals += 1;
+    mn.maxStack += 2;
+  }
 
+  public void transformInnerLoop(String className, MethodNode mn, int begin, int end) {
+    System.out.println("Inner loop from " + begin + " to " + end);
+    @SuppressWarnings("unchecked") ListIterator<AbstractInsnNode> i = mn.instructions.iterator(end);
 
-    return localVariables;
+    /* remove all the instructions within the inner loop. */
+    while(i.hasPrevious() && i.previousIndex() > begin) {
+      i.previous();
+      i.remove();
+    }
+
+    /*
+      final int base = i;
+      futures.add(pool.submit(new Callable<Double> () {
+          public Double call() throws Exception {
+              return Double.valueOf(Math.sqrt((double) base));
+          }
+      }));
+    */
+    i.add(new VarInsnNode(Opcodes.ILOAD, 2));
+    i.add(new VarInsnNode(Opcodes.ISTORE, 4));
+    i.add(new VarInsnNode(Opcodes.ALOAD, 1));
+    i.add(new FieldInsnNode(Opcodes.GETSTATIC, className, "pool", "Ljava/util/concurrent/ExecutorService;"));
+    i.add(new TypeInsnNode(Opcodes.NEW, "fr/yimgo/testasm/ParallelSqrt$1"));
+    i.add(new InsnNode(Opcodes.DUP));
+    i.add(new VarInsnNode(Opcodes.ILOAD, 4));
+    i.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "fr/yimgo/testasm/ParallelSqrt$1", "<init>", "(I)V", false));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ExecutorService", "submit", "(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;", false));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
+    i.add(new InsnNode(Opcodes.POP));
+    i.add(new IincInsnNode(3, 1));
+    mn.maxLocals += 1;
+    mn.maxStack += 2;
   }
 
   /*
+    TODO:
+     * detect the number of fields needed
+     * dynamically determine the maxs
+     * set the inner outer class/methods
     @returns {org.objectweb.asm.tree.ClassNode} the inner class handling @params{instructions] bound by @params{begin} and @params{end}.
   */
-  public ClassNode createInnerClass(String className, InsnList instructions, int begin, int end) {
+  public ClassNode createInnerClass(String className, MethodNode mn, int begin, int end) {
     ClassNode cn = new ClassNode();
     cn.version = Opcodes.V1_8;
     //cn.access = Opcodes.ACC_FINAL + Opcodes.ACC_SUPER;

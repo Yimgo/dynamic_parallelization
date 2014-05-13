@@ -6,6 +6,8 @@ import java.util.ListIterator;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
+import org.pmw.tinylog.Logger;
+
 public class TestASM {
   static public ClassNode createInnerClass() {
     ClassNode cn = new ClassNode();
@@ -66,25 +68,15 @@ public class TestASM {
 
     return cn;
   }
-  static Class<?> registerClass(ClassNode cn) throws Throwable {
-    MyClassLoader cl = MyClassLoader.getInstance();
-    ClassWriter cw = new ClassWriter(0);
-    cn.accept(cw);
-    return cl.defineClass(cn.name.replace("/", "."), cw.toByteArray());
-  }
   public static void main(String... args) {
     try {
-        Class<?> inner = registerClass(createInnerClass());
-        Class<?> outer = registerClass(createOuterClass());
-        System.out.println(inner);
-        System.out.println(outer);
-        Object iInstance = (Object) inner.newInstance();
-        Object oInstance = (Object) outer.newInstance();
-        System.out.println(iInstance);
-        System.out.println(oInstance);
-        outer.getMethod("call").invoke(oInstance);
+    ClassReader cr = new ClassReader("fr.yimgo.testasm.SequentialSqrt");
+    ClassNode cn = new ClassNode();
+    cr.accept(cn, 0);
+    ClassPimp cp = new ClassPimp();
+    cp.transform(cn, "sqrt");
     } catch (Throwable t) {
-        t.printStackTrace(System.err);
+      Logger.error(t);
     }
   }
 }

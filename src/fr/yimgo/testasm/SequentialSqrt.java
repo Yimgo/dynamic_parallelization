@@ -1,8 +1,9 @@
 package fr.yimgo.testasm;
 
 public class SequentialSqrt {
+  public SequentialSqrt() { }
 
-  public static Double sequential_sqrt(int n) {
+  public Double sqrt(int n) {
     Double sum = new Double(0);
 
     for (int i = 0; i < n; i += 1) {
@@ -10,9 +11,5 @@ public class SequentialSqrt {
     }
 
     return sum;
-  }
-
-  public static void main(String... args) throws Throwable {
-    System.out.println(sequential_sqrt(new Integer(args[0])));
   }
 }
