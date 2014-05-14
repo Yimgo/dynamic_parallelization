@@ -1,78 +1,89 @@
 // javap -c -p -s -l -verbose build/fr/yimgo/testasm/ParallelSqrt$1.class
 Classfile /home/guillaume/devel/Yimgo/test_asm/build/fr/yimgo/testasm/ParallelSqrt$1.class
-  Last modified May 6, 2014; size 759 bytes
-  MD5 checksum 7e5392c7445faca89e2451a41f6cadea
-final class fr.yimgo.testasm.ParallelSqrt$1 extends java.lang.Object implements java.util.concurrent.Callable<java.lang.Double>
-  Signature: #20                          // Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Double;>;
-  EnclosingMethod: #22.#23                // fr.yimgo.testasm.ParallelSqrt.parallel_sqrt
+  Last modified May 14, 2014; size 878 bytes
+  MD5 checksum 63c53f2693dc3d9a7cff3b53b2d87142
+class fr.yimgo.testasm.ParallelSqrt$1 extends java.lang.Object implements java.util.concurrent.Callable<java.lang.Double>
+  Signature: #23                          // Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Double;>;
+  EnclosingMethod: #25.#26                // fr.yimgo.testasm.ParallelSqrt.sqrt
   InnerClasses:
-       static #6; //class fr/yimgo/testasm/ParallelSqrt$1
+       #7; //class fr/yimgo/testasm/ParallelSqrt$1
   minor version: 0
   major version: 52
-  flags: ACC_FINAL, ACC_SUPER
+  flags: ACC_SUPER
 Constant pool:
-   #1 = Fieldref           #6.#24         //  fr/yimgo/testasm/ParallelSqrt$1.val$base:I
-   #2 = Methodref          #7.#25         //  java/lang/Object."<init>":()V
-   #3 = Methodref          #26.#27        //  java/lang/Math.sqrt:(D)D
-   #4 = Methodref          #28.#29        //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
-   #5 = Methodref          #6.#30         //  fr/yimgo/testasm/ParallelSqrt$1.call:()Ljava/lang/Double;
-   #6 = Class              #31            //  fr/yimgo/testasm/ParallelSqrt$1
-   #7 = Class              #33            //  java/lang/Object
-   #8 = Class              #34            //  java/util/concurrent/Callable
-   #9 = Utf8               val$base
-  #10 = Utf8               I
-  #11 = Utf8               <init>
-  #12 = Utf8               (I)V
-  #13 = Utf8               Code
-  #14 = Utf8               call
-  #15 = Utf8               ()Ljava/lang/Double;
-  #16 = Utf8               Exceptions
-  #17 = Class              #35            //  java/lang/Exception
-  #18 = Utf8               ()Ljava/lang/Object;
-  #19 = Utf8               Signature
-  #20 = Utf8               Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Double;>;
-  #21 = Utf8               EnclosingMethod
-  #22 = Class              #36            //  fr/yimgo/testasm/ParallelSqrt
-  #23 = NameAndType        #37:#38        //  parallel_sqrt:(I)Ljava/lang/Double;
-  #24 = NameAndType        #9:#10         //  val$base:I
-  #25 = NameAndType        #11:#39        //  "<init>":()V
-  #26 = Class              #40            //  java/lang/Math
-  #27 = NameAndType        #41:#42        //  sqrt:(D)D
-  #28 = Class              #43            //  java/lang/Double
-  #29 = NameAndType        #44:#45        //  valueOf:(D)Ljava/lang/Double;
-  #30 = NameAndType        #14:#15        //  call:()Ljava/lang/Double;
-  #31 = Utf8               fr/yimgo/testasm/ParallelSqrt$1
-  #32 = Utf8               InnerClasses
-  #33 = Utf8               java/lang/Object
-  #34 = Utf8               java/util/concurrent/Callable
-  #35 = Utf8               java/lang/Exception
-  #36 = Utf8               fr/yimgo/testasm/ParallelSqrt
-  #37 = Utf8               parallel_sqrt
-  #38 = Utf8               (I)Ljava/lang/Double;
-  #39 = Utf8               ()V
-  #40 = Utf8               java/lang/Math
+   #1 = Fieldref           #7.#27         //  fr/yimgo/testasm/ParallelSqrt$1.this$0:Lfr/yimgo/testasm/ParallelSqrt;
+   #2 = Fieldref           #7.#28         //  fr/yimgo/testasm/ParallelSqrt$1.val$base:I
+   #3 = Methodref          #8.#29         //  java/lang/Object."<init>":()V
+   #4 = Methodref          #30.#31        //  java/lang/Math.sqrt:(D)D
+   #5 = Methodref          #32.#33        //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
+   #6 = Methodref          #7.#34         //  fr/yimgo/testasm/ParallelSqrt$1.call:()Ljava/lang/Double;
+   #7 = Class              #35            //  fr/yimgo/testasm/ParallelSqrt$1
+   #8 = Class              #37            //  java/lang/Object
+   #9 = Class              #38            //  java/util/concurrent/Callable
+  #10 = Utf8               val$base
+  #11 = Utf8               I
+  #12 = Utf8               this$0
+  #13 = Utf8               Lfr/yimgo/testasm/ParallelSqrt;
+  #14 = Utf8               <init>
+  #15 = Utf8               (Lfr/yimgo/testasm/ParallelSqrt;I)V
+  #16 = Utf8               Code
+  #17 = Utf8               call
+  #18 = Utf8               ()Ljava/lang/Double;
+  #19 = Utf8               Exceptions
+  #20 = Class              #39            //  java/lang/Exception
+  #21 = Utf8               ()Ljava/lang/Object;
+  #22 = Utf8               Signature
+  #23 = Utf8               Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Double;>;
+  #24 = Utf8               EnclosingMethod
+  #25 = Class              #40            //  fr/yimgo/testasm/ParallelSqrt
+  #26 = NameAndType        #41:#42        //  sqrt:(ILjava/util/concurrent/ExecutorService;)Ljava/lang/Double;
+  #27 = NameAndType        #12:#13        //  this$0:Lfr/yimgo/testasm/ParallelSqrt;
+  #28 = NameAndType        #10:#11        //  val$base:I
+  #29 = NameAndType        #14:#43        //  "<init>":()V
+  #30 = Class              #44            //  java/lang/Math
+  #31 = NameAndType        #41:#45        //  sqrt:(D)D
+  #32 = Class              #46            //  java/lang/Double
+  #33 = NameAndType        #47:#48        //  valueOf:(D)Ljava/lang/Double;
+  #34 = NameAndType        #17:#18        //  call:()Ljava/lang/Double;
+  #35 = Utf8               fr/yimgo/testasm/ParallelSqrt$1
+  #36 = Utf8               InnerClasses
+  #37 = Utf8               java/lang/Object
+  #38 = Utf8               java/util/concurrent/Callable
+  #39 = Utf8               java/lang/Exception
+  #40 = Utf8               fr/yimgo/testasm/ParallelSqrt
   #41 = Utf8               sqrt
-  #42 = Utf8               (D)D
-  #43 = Utf8               java/lang/Double
-  #44 = Utf8               valueOf
-  #45 = Utf8               (D)Ljava/lang/Double;
+  #42 = Utf8               (ILjava/util/concurrent/ExecutorService;)Ljava/lang/Double;
+  #43 = Utf8               ()V
+  #44 = Utf8               java/lang/Math
+  #45 = Utf8               (D)D
+  #46 = Utf8               java/lang/Double
+  #47 = Utf8               valueOf
+  #48 = Utf8               (D)Ljava/lang/Double;
 {
   final int val$base;
     descriptor: I
     flags: ACC_FINAL, ACC_SYNTHETIC
 
 
-  fr.yimgo.testasm.ParallelSqrt$1(int);
-    descriptor: (I)V
+  final fr.yimgo.testasm.ParallelSqrt this$0;
+    descriptor: Lfr/yimgo/testasm/ParallelSqrt;
+    flags: ACC_FINAL, ACC_SYNTHETIC
+
+
+  fr.yimgo.testasm.ParallelSqrt$1(fr.yimgo.testasm.ParallelSqrt, int);
+    descriptor: (Lfr/yimgo/testasm/ParallelSqrt;I)V
     flags: 
     Code:
-      stack=2, locals=2, args_size=2
+      stack=2, locals=3, args_size=3
          0: aload_0       
-         1: iload_1       
-         2: putfield      #1                  // Field val$base:I
+         1: aload_1       
+         2: putfield      #1                  // Field this$0:Lfr/yimgo/testasm/ParallelSqrt;
          5: aload_0       
-         6: invokespecial #2                  // Method java/lang/Object."<init>":()V
-         9: return        
+         6: iload_2       
+         7: putfield      #2                  // Field val$base:I
+        10: aload_0       
+        11: invokespecial #3                  // Method java/lang/Object."<init>":()V
+        14: return        
 
   public java.lang.Double call() throws java.lang.Exception;
     descriptor: ()Ljava/lang/Double;
@@ -80,10 +91,10 @@ Constant pool:
     Code:
       stack=2, locals=1, args_size=1
          0: aload_0       
-         1: getfield      #1                  // Field val$base:I
+         1: getfield      #2                  // Field val$base:I
          4: i2d           
-         5: invokestatic  #3                  // Method java/lang/Math.sqrt:(D)D
-         8: invokestatic  #4                  // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
+         5: invokestatic  #4                  // Method java/lang/Math.sqrt:(D)D
+         8: invokestatic  #5                  // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
         11: areturn       
     Exceptions:
       throws java.lang.Exception
@@ -94,7 +105,7 @@ Constant pool:
     Code:
       stack=1, locals=1, args_size=1
          0: aload_0       
-         1: invokevirtual #5                  // Method call:()Ljava/lang/Double;
+         1: invokevirtual #6                  // Method call:()Ljava/lang/Double;
          4: areturn       
     Exceptions:
       throws java.lang.Exception

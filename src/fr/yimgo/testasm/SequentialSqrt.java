@@ -2,7 +2,6 @@ package fr.yimgo.testasm;
 
 public class SequentialSqrt {
   public SequentialSqrt() { }
-
   public Double sqrt(int n) {
     Double sum = new Double(0);
 

@@ -1,6 +1,7 @@
 package fr.yimgo.testasm;
 
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.concurrent.Callable;
 
 import org.objectweb.asm.*;
@@ -19,13 +20,33 @@ public class ClassPimp {
       if (methodName.equals(mn.name)) {
         Logger.info("Pimpin {0}.{1}", cn.name, methodName);
         try {
-          Class<?> inner = registerClass(createInnerClass());
-
-          /* addMethod implements {cn.name}.call() that calls TestInner.call(). */
-          addMethod(cn);
-          Class<?> outer = registerClass(cn);
-          Object outerInstance = (Object) outer.getConstructor().newInstance();
-          outer.getMethod("call").invoke(outerInstance);
+          // determine loop bounddaries
+          ListIterator<AbstractInsnNode> ii = mn.instructions.iterator();
+          AbstractInsnNode beforeLoop = null, loopStart = null, loopEnd = null, afterLoop = null;
+          while (ii.hasNext()) {
+            AbstractInsnNode in = ii.next();
+            if (in instanceof JumpInsnNode) {
+              if (loopStart == null) {
+                loopStart = in;
+              } else {
+                loopEnd = in;
+              }
+            } else if (in instanceof LabelNode) {
+              if (beforeLoop == null) {
+                beforeLoop = in;
+              } else {
+                afterLoop = in;
+              }
+            }
+          }
+          Logger.trace(beforeLoop);
+          Logger.trace(loopStart);
+          Logger.trace(loopEnd);
+          Logger.trace(afterLoop);
+          // add futures in initialization
+          // put inner loop code in inner class
+          // replace inner loop code by calls to innerClass.call()
+          // manage futures after the loop
         } catch (Throwable t) {
           Logger.error(t);
         }
@@ -101,7 +122,7 @@ public class ClassPimp {
     cn.signature = "Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Double;>;";
     cn.interfaces.add("java/util/concurrent/Callable");
     /* TODO: determine all the values accessed by the instructions in the inner-loop. */
-    cn.fields.add(new FieldNode(Opcodes.ACC_FINAL + Opcodes.ACC_SYNTHETIC, "val$base", "I", null, null));
+    cn.fields.add(new FieldNode(Opcodes.ACC_FINAL, "val$base", "I", null, null));
 
     /* constructor */
     MethodNode constructorNode = new MethodNode(Opcodes.ACC_PUBLIC, "<init>", "(I)V", null, null);
@@ -125,14 +146,6 @@ public class ClassPimp {
     callNode.maxStack = 2;
     callNode.maxLocals = 1;
     cn.methods.add(callNode);
-    /* call() bridge */
-    MethodNode bridgeNode = new MethodNode(Opcodes.ACC_PUBLIC + Opcodes.ACC_BRIDGE + Opcodes.ACC_SYNTHETIC, "call", "()Ljava/lang/Object;", null, new String[]{"java/lang/Exception"});
-    bridgeNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    bridgeNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, cn.name, "call", "()Ljava/lang/Double;", false));
-    bridgeNode.instructions.add(new InsnNode(Opcodes.ARETURN));
-    bridgeNode.maxStack = 1;
-    bridgeNode.maxLocals = 1;
-    cn.methods.add(bridgeNode);
 
     return cn;
   }
