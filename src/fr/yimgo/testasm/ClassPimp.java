@@ -17,23 +17,19 @@ public class ClassPimp {
     while (i.hasNext()) {
       MethodNode mn = i.next();
       if (methodName.equals(mn.name)) {
-        Logger.info("Pimpin' {0}.{1}", cn.name, methodName);
+        Logger.info("Pimpin {0}.{1}", cn.name, methodName);
         try {
           Class<?> inner = registerClass(createInnerClass());
-          Logger.trace(inner);
-          Callable innerInstance = (Callable) inner.getConstructor(int.class).newInstance(2);
-          Logger.trace(innerInstance);
-          Logger.trace(inner.getMethod("call").invoke(innerInstance));
 
-          /*addMethod(cn);
+          /* addMethod implements {cn.name}.call() that calls TestInner.call(). */
+          addMethod(cn);
           Class<?> outer = registerClass(cn);
-          Logger.trace(outer);
           Object outerInstance = (Object) outer.getConstructor().newInstance();
-          Logger.trace(outerInstance);
-          Logger.trace(outer.getMethod("call").invoke(outerInstance));*/
+          outer.getMethod("call").invoke(outerInstance);
         } catch (Throwable t) {
           Logger.error(t);
         }
+        break;
       }
     }
   }
@@ -41,14 +37,13 @@ public class ClassPimp {
   public void addMethod(ClassNode cn) {
     Logger.info("Adding {0}.call()", cn.name);
     MethodNode callNode = new MethodNode(Opcodes.ACC_PUBLIC, "call", "()V", null, null);
+    // Class <?> inner = MyClassLoader.getInstance().loadClass("fr.yimgo.testasm.TestInner");
+    //  MyClassLoader.getInstance()
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "fr/yimgo/testasm/MyClassLoader", "getInstance", "()Lfr/yimgo/testasm/MyClassLoader;", false));
+    //  .loadClass("fr.yimgo.testasm.TestInner");
     callNode.instructions.add(new LdcInsnNode("fr.yimgo.testasm.TestInner"));
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "fr/yimgo/testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
     callNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-    callNode.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-    callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/Object;)V", false));
-    callNode.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
     callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
     // Callable innerInstance = (Callable) inner.getConstructor(int.class).newInstance(2);
     //  inner.getConstructor(int.class)
@@ -68,12 +63,11 @@ public class ClassPimp {
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false));
     callNode.instructions.add(new InsnNode(Opcodes.AASTORE));
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;", false));
-    //  (Callable)
     callNode.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/util/concurrent/Callable"));
-    //  a = b
     callNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 2));
 
-    // inner.getMethod("call").invoke(innerInstance)
+    // System.out.println(inner.getMethod("call").invoke(innerInstance));
+    callNode.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
     //  inner.getMethod("call")
     callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
     callNode.instructions.add(new LdcInsnNode("call"));
@@ -86,11 +80,13 @@ public class ClassPimp {
     callNode.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Object"));
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Method", "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;", false));
 
-
+    //  System.out.println();
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/Object;)V", false));
+
     callNode.instructions.add(new InsnNode(Opcodes.RETURN));
-    callNode.maxStack = 4;
-    callNode.maxLocals = 2;
+
+    callNode.maxStack = 5;
+    callNode.maxLocals = 3;
     cn.methods.add(callNode);
   }
 
