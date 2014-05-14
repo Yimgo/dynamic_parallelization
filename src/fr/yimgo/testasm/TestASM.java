@@ -70,11 +70,11 @@ public class TestASM {
   }
   public static void main(String... args) {
     try {
-    ClassReader cr = new ClassReader("fr.yimgo.testasm.SequentialSqrt");
-    ClassNode cn = new ClassNode();
-    cr.accept(cn, 0);
-    ClassPimp cp = new ClassPimp();
-    cp.transform(cn, "sqrt");
+      ClassReader cr = new ClassReader("fr.yimgo.testasm.SequentialSqrt");
+      ClassNode cn = new ClassNode();
+      cr.accept(cn, 0);
+      ClassPimp cp = new ClassPimp();
+      cp.transform(cn, "sqrt");
     } catch (Throwable t) {
       Logger.error(t);
     }

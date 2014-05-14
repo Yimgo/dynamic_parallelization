@@ -46,7 +46,9 @@ public class ClassPimp {
           // add futures in initialization
           addFuturesArray(mn, beforeLoop);
           // TODO: put inner loop code in inner class
+          registerClass(createInnerClass());
           // TODO: replace inner loop code by calls to innerClass.call()
+
           // TODO: manage futures after the loop
 
           // consistency check
@@ -62,7 +64,7 @@ public class ClassPimp {
   }
 
   public void addFuturesArray(MethodNode mn, AbstractInsnNode beforeLoop) {
-    Logger.info("Adding futures array to {0}", mn.name);
+    Logger.info("Adding futures array to {0}()", mn.name);
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop) - 1);
 
     // List<Future<Double>> futures = new ArrayList<Future<Double>>();
@@ -72,6 +74,10 @@ public class ClassPimp {
     i.add(new VarInsnNode(Opcodes.ASTORE, 3));
     mn.maxLocals += 1;
     mn.maxStack += 2;
+  }
+
+  public void replaceInnerCode(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
+    return;
   }
 
   public void addMethod(ClassNode cn) {

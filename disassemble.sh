@@ -18,7 +18,7 @@ function disassemble {
 if [[ -n ${1} ]]; then
   disassemble ${1}
 else
-  readonly classes=("ParallelSqrt.class" "ParallelSqrt\$1.class" "SequentialSqrt.class")
+  readonly classes=("ParallelSqrt.class" "ParallelSqrtInner.class" "SequentialSqrt.class")
   for i in "${classes[@]}";
   do
     disassemble ${i}

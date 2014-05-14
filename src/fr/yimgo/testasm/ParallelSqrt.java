@@ -13,12 +13,9 @@ public class ParallelSqrt {
         List<Future<Double>> futures = new ArrayList<Future<Double>>();
 
         for (int i = 0; i < n; i += 1) {
-            final int base = i;
-            futures.add(pool.submit(new Callable<Double> () {
-                public Double call() throws Exception {
-                    return Double.valueOf(Math.sqrt((double) base));
-                }
-            }));
+            Class<?> inner = ClassLoader.getSystemClassLoader().loadClass("fr.yimgo.testasm.ParallelSqrtInner");
+            Callable innerInstance = (Callable) inner.getConstructor(int.class).newInstance(i);
+            futures.add(pool.submit(innerInstance));
         }
 
         for (Future<Double> future : futures){
@@ -26,5 +23,15 @@ public class ParallelSqrt {
         }
 
         return sum;
+    }
+}
+
+class ParallelSqrtInner implements Callable<Double> {
+    final private int val;
+    public ParallelSqrtInner(int v) {
+        val = v;
+    }
+    public Double call() throws Exception {
+        return Double.valueOf(Math.sqrt((double) val));
     }
 }
