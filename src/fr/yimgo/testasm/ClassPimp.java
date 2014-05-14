@@ -44,15 +44,34 @@ public class ClassPimp {
           Logger.trace(loopEnd);
           Logger.trace(afterLoop);
           // add futures in initialization
-          // put inner loop code in inner class
-          // replace inner loop code by calls to innerClass.call()
-          // manage futures after the loop
+          addFuturesArray(mn, beforeLoop);
+          // TODO: put inner loop code in inner class
+          // TODO: replace inner loop code by calls to innerClass.call()
+          // TODO: manage futures after the loop
+
+          // consistency check
+          Class<?> pimped = registerClass(cn);
+          Object pimpedInstance = (Object) pimped.getConstructor().newInstance();
+          Logger.trace(pimped.getMethod(methodName, int.class).invoke(pimpedInstance, 2));
         } catch (Throwable t) {
           Logger.error(t);
         }
         break;
       }
     }
+  }
+
+  public void addFuturesArray(MethodNode mn, AbstractInsnNode beforeLoop) {
+    Logger.info("Adding futures array to {0}", mn.name);
+    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop) - 1);
+
+    // List<Future<Double>> futures = new ArrayList<Future<Double>>();
+    i.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
+    i.add(new InsnNode(Opcodes.DUP));
+    i.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 3));
+    mn.maxLocals += 1;
+    mn.maxStack += 2;
   }
 
   public void addMethod(ClassNode cn) {
