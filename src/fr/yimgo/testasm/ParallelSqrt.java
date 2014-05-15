@@ -7,8 +7,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 public class ParallelSqrt {
+    public ExecutorService pool;
     public ParallelSqrt() { }
-    public Double sqrt(int n, ExecutorService pool) throws Throwable {
+    public Double sqrt(int n) throws Throwable {
         Double sum = new Double(0);
         List<Future<Double>> futures = new ArrayList<Future<Double>>();
 

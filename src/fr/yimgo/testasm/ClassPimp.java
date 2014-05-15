@@ -1,8 +1,11 @@
 package fr.yimgo.testasm;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
@@ -20,7 +23,7 @@ public class ClassPimp {
       if (methodName.equals(mn.name)) {
         Logger.info("Pimpin {0}.{1}", cn.name, methodName);
         try {
-          // determine loop bounddaries
+          // determine loop boundaries
           ListIterator<AbstractInsnNode> ii = mn.instructions.iterator();
           AbstractInsnNode beforeLoop = null, loopStart = null, loopEnd = null, afterLoop = null;
           while (ii.hasNext()) {
@@ -39,22 +42,22 @@ public class ClassPimp {
               }
             }
           }
-          Logger.trace(beforeLoop);
-          Logger.trace(loopStart);
-          Logger.trace(loopEnd);
-          Logger.trace(afterLoop);
+
           // add futures in initialization
           addFuturesArray(mn, beforeLoop);
-          // TODO: put inner loop code in inner class
+          // put inner loop code in inner class
           registerClass(createInnerClass());
-          // TODO: replace inner loop code by calls to innerClass.call()
-
+          // replace inner loop code by calls to innerClass.call()
+          replaceInnerCode(cn, mn, loopStart, loopEnd);
           // TODO: manage futures after the loop
 
           // consistency check
           Class<?> pimped = registerClass(cn);
           Object pimpedInstance = (Object) pimped.getConstructor().newInstance();
+          ExecutorService pool = Executors.newFixedThreadPool(2);
+          pimped.getDeclaredField("pool").set(pimpedInstance, pool);
           Logger.trace(pimped.getMethod(methodName, int.class).invoke(pimpedInstance, 2));
+          pool.shutdown();
         } catch (Throwable t) {
           Logger.error(t);
         }
@@ -65,19 +68,70 @@ public class ClassPimp {
 
   public void addFuturesArray(MethodNode mn, AbstractInsnNode beforeLoop) {
     Logger.info("Adding futures array to {0}()", mn.name);
-    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop) - 1);
+    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
 
+    Logger.trace(mn.localVariables.size());
     // List<Future<Double>> futures = new ArrayList<Future<Double>>();
     i.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
     i.add(new InsnNode(Opcodes.DUP));
     i.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
-    i.add(new VarInsnNode(Opcodes.ASTORE, 3));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 4));
+
+    /* set new maxes */
     mn.maxLocals += 1;
-    mn.maxStack += 2;
+
+    /* add the future list into the local list */
+    i.next();
+    FrameNode f = (FrameNode) i.next();
+    f.local = new ArrayList(f.local);
+    f.local.add("java/util/ArrayList");
   }
 
-  public void replaceInnerCode(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
-    return;
+  public void replaceInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
+    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(loopEnd));
+
+    Logger.info("Adding {0}.pool", cn.name);
+    cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "pool", "Ljava/util/concurrent/ExecutorService;", null, null));
+
+    Logger.info("Replacing inner code");
+    while (i.hasPrevious() && i.previousIndex() > mn.instructions.indexOf(loopStart)) {
+      i.previous();
+      i.remove();
+    }
+
+    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "fr/yimgo/testasm/MyClassLoader", "getInstance", "()Lfr/yimgo/testasm/MyClassLoader;", false));
+    i.add(new LdcInsnNode("fr.yimgo.testasm.TestInner"));
+    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "fr/yimgo/testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 5)); // justify the 5 plz
+    i.add(new VarInsnNode(Opcodes.ALOAD, 5)); // idem
+    i.add(new InsnNode(Opcodes.ICONST_1));
+    i.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Class"));
+    i.add(new InsnNode(Opcodes.DUP));
+    i.add(new InsnNode(Opcodes.ICONST_0));
+    i.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;"));
+    i.add(new InsnNode(Opcodes.AASTORE));
+    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getConstructor", "([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;", false));
+    i.add(new InsnNode(Opcodes.ICONST_1));
+    i.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Object"));
+    i.add(new InsnNode(Opcodes.DUP));
+    i.add(new InsnNode(Opcodes.ICONST_0));
+    i.add(new VarInsnNode(Opcodes.ILOAD, 3)); // justify the 3 plz
+    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false));
+    i.add(new InsnNode(Opcodes.AASTORE));
+    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;", false));
+    i.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/util/concurrent/Callable"));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 6)); // justify the 6 plz
+    i.add(new VarInsnNode(Opcodes.ALOAD, 4)); // the arraylist
+    i.add(new VarInsnNode(Opcodes.ALOAD, 0)); // this
+    i.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "pool", "Ljava/util/concurrent/ExecutorService;"));
+    i.add(new VarInsnNode(Opcodes.ALOAD, 6)); // the callable instance
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ExecutorService", "submit", "(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;", true));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
+    i.add(new InsnNode(Opcodes.POP));
+    i.add(new IincInsnNode(3, 1));
+
+    mn.maxLocals += 2;
+    mn.maxStack += 1;
   }
 
   public void addMethod(ClassNode cn) {
@@ -180,5 +234,12 @@ public class ClassPimp {
     ClassWriter cw = new ClassWriter(0);
     cn.accept(cw);
     return cl.defineClass(cn.name.replace("/", "."), cw.toByteArray());
+  }
+
+  public static void printOpcodes(InsnList instructions) {
+    ListIterator<AbstractInsnNode> i = instructions.iterator();
+    while (i.hasNext()) {
+      System.out.println(i.next().getOpcode());
+    }
   }
 }
