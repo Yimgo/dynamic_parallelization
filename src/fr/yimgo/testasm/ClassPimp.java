@@ -50,6 +50,7 @@ public class ClassPimp {
           // replace inner loop code by calls to innerClass.call()
           replaceInnerCode(cn, mn, loopStart, loopEnd);
           // TODO: manage futures after the loop
+          adaptAfterCode(mn, afterLoop);
 
           // consistency check
           Class<?> pimped = registerClass(cn);
@@ -70,7 +71,6 @@ public class ClassPimp {
     Logger.info("Adding futures array to {0}()", mn.name);
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
 
-    Logger.trace(mn.localVariables.size());
     // List<Future<Double>> futures = new ArrayList<Future<Double>>();
     i.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
     i.add(new InsnNode(Opcodes.DUP));
@@ -82,9 +82,8 @@ public class ClassPimp {
 
     /* add the future list into the local list */
     i.next();
-    FrameNode f = (FrameNode) i.next();
-    f.local = new ArrayList(f.local);
-    f.local.add("java/util/ArrayList");
+    i.next();
+    i.set(new FrameNode(Opcodes.F_APPEND, 3, new Object[] {"java/lang/Double", Opcodes.INTEGER, "java/util/List"}, 0, null));
   }
 
   public void replaceInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
@@ -134,60 +133,40 @@ public class ClassPimp {
     mn.maxStack += 1;
   }
 
-  public void addMethod(ClassNode cn) {
-    Logger.info("Adding {0}.call()", cn.name);
-    MethodNode callNode = new MethodNode(Opcodes.ACC_PUBLIC, "call", "()V", null, null);
-    // Class <?> inner = MyClassLoader.getInstance().loadClass("fr.yimgo.testasm.TestInner");
-    //  MyClassLoader.getInstance()
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "fr/yimgo/testasm/MyClassLoader", "getInstance", "()Lfr/yimgo/testasm/MyClassLoader;", false));
-    //  .loadClass("fr.yimgo.testasm.TestInner");
-    callNode.instructions.add(new LdcInsnNode("fr.yimgo.testasm.TestInner"));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "fr/yimgo/testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
-    callNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-    callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    // Callable innerInstance = (Callable) inner.getConstructor(int.class).newInstance(2);
-    //  inner.getConstructor(int.class)
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_1));
-    callNode.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Class"));
-    callNode.instructions.add(new InsnNode(Opcodes.DUP));
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_0));
-    callNode.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;"));
-    callNode.instructions.add(new InsnNode(Opcodes.AASTORE));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getConstructor", "([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;", false));
-    //  .newInstance(2);
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_1));
-    callNode.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Object"));
-    callNode.instructions.add(new InsnNode(Opcodes.DUP));
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_0));
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_2));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false));
-    callNode.instructions.add(new InsnNode(Opcodes.AASTORE));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;", false));
-    callNode.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/util/concurrent/Callable"));
-    callNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 2));
+  public void adaptAfterCode(MethodNode mn, AbstractInsnNode afterLoop) {
+    Logger.info("Adding instructions to compute the sum from yields");
+    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(afterLoop));
 
-    // System.out.println(inner.getMethod("call").invoke(innerInstance));
-    callNode.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-    //  inner.getMethod("call")
-    callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    callNode.instructions.add(new LdcInsnNode("call"));
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_0));
-    callNode.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Class"));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;", false));
-    //  .invoke(innerInstance)
-    callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
-    callNode.instructions.add(new InsnNode(Opcodes.ICONST_0));
-    callNode.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Object"));
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Method", "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;", false));
+    i.next();
+    i.next();
+    i.set(new FrameNode(Opcodes.F_CHOP, 0, null, 0, null));
 
-    //  System.out.println();
-    callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/Object;)V", false));
-
-    callNode.instructions.add(new InsnNode(Opcodes.RETURN));
-
-    callNode.maxStack = 5;
-    callNode.maxLocals = 3;
-    cn.methods.add(callNode);
+    i.add(new VarInsnNode(Opcodes.ALOAD, 4));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 5));
+    LabelNode ln1 = new LabelNode(new Label());
+    i.add(ln1);
+    i.add(new FrameNode(Opcodes.F_APPEND, 1, new Object[] {"java/util/Iterator"}, 0, null));
+    i.add(new VarInsnNode(Opcodes.ALOAD, 5));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true));
+    LabelNode ln2 = new LabelNode(new Label());
+    i.add(new JumpInsnNode(Opcodes.IFEQ, ln2));
+    i.add(new VarInsnNode(Opcodes.ALOAD, 5));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true));
+    i.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/util/concurrent/Future"));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 6));
+    i.add(new VarInsnNode(Opcodes.ALOAD, 2));
+    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false));
+    i.add(new VarInsnNode(Opcodes.ALOAD, 6));
+    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/Future", "get", "()Ljava/lang/Object;", true));
+    i.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/lang/Double"));
+    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false));
+    i.add(new InsnNode(Opcodes.DADD));
+    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 2));
+    i.add(new JumpInsnNode(Opcodes.GOTO, ln1));
+    i.add(ln2);
+    i.add(new FrameNode(Opcodes.F_CHOP, 1, null, 0, null));
   }
 
   public ClassNode createInnerClass() {
@@ -195,19 +174,19 @@ public class ClassPimp {
 
     ClassNode cn = new ClassNode();
     cn.version = Opcodes.V1_8;
-    cn.access = Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL + Opcodes.ACC_SUPER;
+    cn.access = Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER;
     cn.name = "fr/yimgo/testasm/TestInner";
     cn.superName = "java/lang/Object";
     cn.signature = "Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Double;>;";
     cn.interfaces.add("java/util/concurrent/Callable");
     /* TODO: determine all the values accessed by the instructions in the inner-loop. */
-    cn.fields.add(new FieldNode(Opcodes.ACC_FINAL, "val$base", "I", null, null));
+    cn.fields.add(new FieldNode(Opcodes.ACC_PRIVATE + Opcodes.ACC_FINAL, "val", "I", null, null));
 
     /* constructor */
     MethodNode constructorNode = new MethodNode(Opcodes.ACC_PUBLIC, "<init>", "(I)V", null, null);
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ILOAD, 1));
-    constructorNode.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, cn.name, "val$base", "I"));
+    constructorNode.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, cn.name, "val", "I"));
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     constructorNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
     constructorNode.instructions.add(new InsnNode(Opcodes.RETURN));
@@ -217,7 +196,7 @@ public class ClassPimp {
     /* call() */
     MethodNode callNode = new MethodNode(Opcodes.ACC_PUBLIC, "call", "()Ljava/lang/Double;", null, null);
     callNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    callNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "val$base", "I"));
+    callNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "val", "I"));
     callNode.instructions.add(new InsnNode(Opcodes.I2D));
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Math", "sqrt", "(D)D", false));
     callNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false));
@@ -225,6 +204,15 @@ public class ClassPimp {
     callNode.maxStack = 2;
     callNode.maxLocals = 1;
     cn.methods.add(callNode);
+
+    /* call() bridge */
+    MethodNode bridgeNode = new MethodNode(Opcodes.ACC_PUBLIC + Opcodes.ACC_BRIDGE + Opcodes.ACC_SYNTHETIC, "call", "()Ljava/lang/Object;", null, new String[] {"java/lang/Exception"});
+    bridgeNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    bridgeNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, cn.name, "call", "()Ljava/lang/Double;", false));
+    bridgeNode.instructions.add(new InsnNode(Opcodes.ARETURN));
+    bridgeNode.maxStack = 1;
+    bridgeNode.maxLocals = 1;
+    cn.methods.add(bridgeNode);
 
     return cn;
   }
