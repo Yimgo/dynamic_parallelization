@@ -1,5 +1,6 @@
 package fr.yimgo.testasm;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -49,7 +50,7 @@ public class ClassPimp {
           registerClass(createInnerClass());
           // replace inner loop code by calls to innerClass.call()
           replaceInnerCode(cn, mn, loopStart, loopEnd);
-          // TODO: manage futures after the loop
+          // manage futures after the loop
           adaptAfterCode(mn, afterLoop);
 
           // consistency check
@@ -57,7 +58,7 @@ public class ClassPimp {
           Object pimpedInstance = (Object) pimped.getConstructor().newInstance();
           ExecutorService pool = Executors.newFixedThreadPool(2);
           pimped.getDeclaredField("pool").set(pimpedInstance, pool);
-          Logger.trace(pimped.getMethod(methodName, int.class).invoke(pimpedInstance, 2));
+          Logger.trace(pimped.getMethod(methodName, int.class).invoke(pimpedInstance, 5));
           pool.shutdown();
         } catch (Throwable t) {
           Logger.error(t);
@@ -69,27 +70,28 @@ public class ClassPimp {
 
   public void addFuturesArray(MethodNode mn, AbstractInsnNode beforeLoop) {
     Logger.info("Adding futures array to {0}()", mn.name);
+
+    // insert the list initialization before the main loop
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
 
-    // List<Future<Double>> futures = new ArrayList<Future<Double>>();
+    // List<Future<?>> futures = new ArrayList<Future<?>>();
     i.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
     i.add(new InsnNode(Opcodes.DUP));
     i.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
-    i.add(new VarInsnNode(Opcodes.ASTORE, 4));
+    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals++)); // don't forget to increment the maxLocals value since a new local is added
 
-    /* set new maxes */
-    mn.maxLocals += 1;
-
-    /* add the future list into the local list */
-    i.next();
-    i.next();
-    i.set(new FrameNode(Opcodes.F_APPEND, 3, new Object[] {"java/lang/Double", Opcodes.INTEGER, "java/util/List"}, 0, null));
+    // add the future list into the local list
+    i.next(); // seek for the frame node
+    List oldLocal = ((FrameNode) i.next()).local;
+    List newLocal = new ArrayList<Object>(oldLocal);
+    newLocal.add("java/util/List");
+    i.set(new FrameNode(Opcodes.F_APPEND, newLocal.size(), newLocal.toArray(), 0, null));
   }
 
   public void replaceInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(loopEnd));
 
-    Logger.info("Adding {0}.pool", cn.name);
+    Logger.info("Adding {0}.pool as a method member", cn.name);
     cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "pool", "Ljava/util/concurrent/ExecutorService;", null, null));
 
     Logger.info("Replacing inner code");
