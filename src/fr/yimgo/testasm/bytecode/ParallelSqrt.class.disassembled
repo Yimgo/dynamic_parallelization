@@ -1,109 +1,125 @@
 // javap -c -p -s -l -verbose build/fr/yimgo/testasm/ParallelSqrt.class
 Classfile /home/guillaume/devel/Yimgo/test_asm/build/fr/yimgo/testasm/ParallelSqrt.class
-  Last modified May 22, 2014; size 1502 bytes
-  MD5 checksum 69a5679e9eec3a52fc15678b87153a9d
+  Last modified May 29, 2014; size 1712 bytes
+  MD5 checksum 354ba998ea29af167ef18e1f4b9d0aeb
 public class fr.yimgo.testasm.ParallelSqrt
   minor version: 0
   major version: 52
   flags: ACC_PUBLIC, ACC_SUPER
 Constant pool:
-   #1 = Methodref          #16.#40        //  java/lang/Object."<init>":()V
-   #2 = Class              #41            //  java/lang/Double
-   #3 = Methodref          #2.#42         //  java/lang/Double."<init>":(D)V
-   #4 = Class              #43            //  java/util/ArrayList
-   #5 = Methodref          #4.#40         //  java/util/ArrayList."<init>":()V
-   #6 = Methodref          #44.#45        //  java/lang/ClassLoader.getSystemClassLoader:()Ljava/lang/ClassLoader;
-   #7 = String             #46            //  fr.yimgo.testasm.ParallelSqrtInner
-   #8 = Methodref          #44.#47        //  java/lang/ClassLoader.loadClass:(Ljava/lang/String;)Ljava/lang/Class;
-   #9 = InterfaceMethodref #48.#49        //  java/util/List.add:(Ljava/lang/Object;)Z
-  #10 = Class              #50            //  java/lang/Integer
-  #11 = Methodref          #10.#51        //  java/lang/Integer."<init>":(I)V
-  #12 = Class              #52            //  java/lang/Class
-  #13 = String             #53            //  java.util.List
-  #14 = Methodref          #12.#54        //  java/lang/Class.forName:(Ljava/lang/String;)Ljava/lang/Class;
-  #15 = Methodref          #12.#55        //  java/lang/Class.getConstructor:([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
-  #16 = Class              #56            //  java/lang/Object
-  #17 = Methodref          #57.#58        //  java/lang/reflect/Constructor.newInstance:([Ljava/lang/Object;)Ljava/lang/Object;
-  #18 = Class              #59            //  java/lang/Runnable
-  #19 = Fieldref           #26.#60        //  fr/yimgo/testasm/ParallelSqrt.pool:Ljava/util/concurrent/ExecutorService;
-  #20 = InterfaceMethodref #61.#62        //  java/util/concurrent/ExecutorService.submit:(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
-  #21 = InterfaceMethodref #48.#63        //  java/util/List.iterator:()Ljava/util/Iterator;
-  #22 = InterfaceMethodref #64.#65        //  java/util/Iterator.hasNext:()Z
-  #23 = InterfaceMethodref #64.#66        //  java/util/Iterator.next:()Ljava/lang/Object;
-  #24 = Class              #67            //  java/util/concurrent/Future
-  #25 = InterfaceMethodref #24.#68        //  java/util/concurrent/Future.get:()Ljava/lang/Object;
-  #26 = Class              #69            //  fr/yimgo/testasm/ParallelSqrt
-  #27 = Utf8               pool
-  #28 = Utf8               Ljava/util/concurrent/ExecutorService;
-  #29 = Utf8               <init>
-  #30 = Utf8               ()V
-  #31 = Utf8               Code
-  #32 = Utf8               sqrt
-  #33 = Utf8               (I)Ljava/lang/Double;
-  #34 = Utf8               StackMapTable
-  #35 = Class              #41            //  java/lang/Double
-  #36 = Class              #70            //  java/util/List
-  #37 = Class              #71            //  java/util/Iterator
-  #38 = Utf8               Exceptions
-  #39 = Class              #72            //  java/lang/Throwable
-  #40 = NameAndType        #29:#30        //  "<init>":()V
-  #41 = Utf8               java/lang/Double
-  #42 = NameAndType        #29:#73        //  "<init>":(D)V
-  #43 = Utf8               java/util/ArrayList
-  #44 = Class              #74            //  java/lang/ClassLoader
-  #45 = NameAndType        #75:#76        //  getSystemClassLoader:()Ljava/lang/ClassLoader;
-  #46 = Utf8               fr.yimgo.testasm.ParallelSqrtInner
-  #47 = NameAndType        #77:#78        //  loadClass:(Ljava/lang/String;)Ljava/lang/Class;
-  #48 = Class              #70            //  java/util/List
-  #49 = NameAndType        #79:#80        //  add:(Ljava/lang/Object;)Z
-  #50 = Utf8               java/lang/Integer
-  #51 = NameAndType        #29:#81        //  "<init>":(I)V
-  #52 = Utf8               java/lang/Class
-  #53 = Utf8               java.util.List
-  #54 = NameAndType        #82:#78        //  forName:(Ljava/lang/String;)Ljava/lang/Class;
-  #55 = NameAndType        #83:#84        //  getConstructor:([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
-  #56 = Utf8               java/lang/Object
-  #57 = Class              #85            //  java/lang/reflect/Constructor
-  #58 = NameAndType        #86:#87        //  newInstance:([Ljava/lang/Object;)Ljava/lang/Object;
-  #59 = Utf8               java/lang/Runnable
-  #60 = NameAndType        #27:#28        //  pool:Ljava/util/concurrent/ExecutorService;
-  #61 = Class              #88            //  java/util/concurrent/ExecutorService
-  #62 = NameAndType        #89:#90        //  submit:(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
-  #63 = NameAndType        #91:#92        //  iterator:()Ljava/util/Iterator;
-  #64 = Class              #71            //  java/util/Iterator
-  #65 = NameAndType        #93:#94        //  hasNext:()Z
-  #66 = NameAndType        #95:#96        //  next:()Ljava/lang/Object;
-  #67 = Utf8               java/util/concurrent/Future
-  #68 = NameAndType        #97:#96        //  get:()Ljava/lang/Object;
-  #69 = Utf8               fr/yimgo/testasm/ParallelSqrt
-  #70 = Utf8               java/util/List
-  #71 = Utf8               java/util/Iterator
-  #72 = Utf8               java/lang/Throwable
-  #73 = Utf8               (D)V
-  #74 = Utf8               java/lang/ClassLoader
-  #75 = Utf8               getSystemClassLoader
-  #76 = Utf8               ()Ljava/lang/ClassLoader;
-  #77 = Utf8               loadClass
-  #78 = Utf8               (Ljava/lang/String;)Ljava/lang/Class;
-  #79 = Utf8               add
-  #80 = Utf8               (Ljava/lang/Object;)Z
-  #81 = Utf8               (I)V
-  #82 = Utf8               forName
-  #83 = Utf8               getConstructor
-  #84 = Utf8               ([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
-  #85 = Utf8               java/lang/reflect/Constructor
-  #86 = Utf8               newInstance
-  #87 = Utf8               ([Ljava/lang/Object;)Ljava/lang/Object;
-  #88 = Utf8               java/util/concurrent/ExecutorService
-  #89 = Utf8               submit
-  #90 = Utf8               (Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
-  #91 = Utf8               iterator
-  #92 = Utf8               ()Ljava/util/Iterator;
-  #93 = Utf8               hasNext
-  #94 = Utf8               ()Z
-  #95 = Utf8               next
-  #96 = Utf8               ()Ljava/lang/Object;
-  #97 = Utf8               get
+    #1 = Methodref          #19.#47       //  java/lang/Object."<init>":()V
+    #2 = Methodref          #30.#48       //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
+    #3 = Class              #49           //  java/util/ArrayList
+    #4 = Methodref          #3.#47        //  java/util/ArrayList."<init>":()V
+    #5 = Methodref          #9.#50        //  java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+    #6 = Class              #51           //  java/util/concurrent/CopyOnWriteArrayList
+    #7 = Methodref          #6.#47        //  java/util/concurrent/CopyOnWriteArrayList."<init>":()V
+    #8 = InterfaceMethodref #52.#53       //  java/util/List.add:(Ljava/lang/Object;)Z
+    #9 = Class              #54           //  java/lang/Integer
+   #10 = Methodref          #9.#55        //  java/lang/Integer."<init>":(I)V
+   #11 = Methodref          #9.#56        //  java/lang/Integer.intValue:()I
+   #12 = Methodref          #57.#58       //  java/lang/ClassLoader.getSystemClassLoader:()Ljava/lang/ClassLoader;
+   #13 = String             #59           //  fr.yimgo.testasm.ParallelSqrtInner
+   #14 = Methodref          #57.#60       //  java/lang/ClassLoader.loadClass:(Ljava/lang/String;)Ljava/lang/Class;
+   #15 = Class              #61           //  java/lang/Class
+   #16 = String             #62           //  java.util.List
+   #17 = Methodref          #15.#63       //  java/lang/Class.forName:(Ljava/lang/String;)Ljava/lang/Class;
+   #18 = Methodref          #15.#64       //  java/lang/Class.getConstructor:([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
+   #19 = Class              #65           //  java/lang/Object
+   #20 = Methodref          #66.#67       //  java/lang/reflect/Constructor.newInstance:([Ljava/lang/Object;)Ljava/lang/Object;
+   #21 = Class              #68           //  java/lang/Runnable
+   #22 = Fieldref           #31.#69       //  fr/yimgo/testasm/ParallelSqrt.pool:Ljava/util/concurrent/ExecutorService;
+   #23 = InterfaceMethodref #70.#71       //  java/util/concurrent/ExecutorService.submit:(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
+   #24 = InterfaceMethodref #52.#72       //  java/util/List.iterator:()Ljava/util/Iterator;
+   #25 = InterfaceMethodref #73.#74       //  java/util/Iterator.hasNext:()Z
+   #26 = InterfaceMethodref #73.#75       //  java/util/Iterator.next:()Ljava/lang/Object;
+   #27 = Class              #76           //  java/util/concurrent/Future
+   #28 = InterfaceMethodref #27.#77       //  java/util/concurrent/Future.get:()Ljava/lang/Object;
+   #29 = InterfaceMethodref #52.#78       //  java/util/List.get:(I)Ljava/lang/Object;
+   #30 = Class              #79           //  java/lang/Double
+   #31 = Class              #80           //  fr/yimgo/testasm/ParallelSqrt
+   #32 = Utf8               pool
+   #33 = Utf8               Ljava/util/concurrent/ExecutorService;
+   #34 = Utf8               <init>
+   #35 = Utf8               ()V
+   #36 = Utf8               Code
+   #37 = Utf8               sqrt
+   #38 = Utf8               (I)Ljava/lang/Double;
+   #39 = Utf8               StackMapTable
+   #40 = Class              #80           //  fr/yimgo/testasm/ParallelSqrt
+   #41 = Class              #79           //  java/lang/Double
+   #42 = Class              #81           //  java/util/List
+   #43 = Class              #54           //  java/lang/Integer
+   #44 = Class              #82           //  java/util/Iterator
+   #45 = Utf8               Exceptions
+   #46 = Class              #83           //  java/lang/Throwable
+   #47 = NameAndType        #34:#35       //  "<init>":()V
+   #48 = NameAndType        #84:#85       //  valueOf:(D)Ljava/lang/Double;
+   #49 = Utf8               java/util/ArrayList
+   #50 = NameAndType        #84:#86       //  valueOf:(I)Ljava/lang/Integer;
+   #51 = Utf8               java/util/concurrent/CopyOnWriteArrayList
+   #52 = Class              #81           //  java/util/List
+   #53 = NameAndType        #87:#88       //  add:(Ljava/lang/Object;)Z
+   #54 = Utf8               java/lang/Integer
+   #55 = NameAndType        #34:#89       //  "<init>":(I)V
+   #56 = NameAndType        #90:#91       //  intValue:()I
+   #57 = Class              #92           //  java/lang/ClassLoader
+   #58 = NameAndType        #93:#94       //  getSystemClassLoader:()Ljava/lang/ClassLoader;
+   #59 = Utf8               fr.yimgo.testasm.ParallelSqrtInner
+   #60 = NameAndType        #95:#96       //  loadClass:(Ljava/lang/String;)Ljava/lang/Class;
+   #61 = Utf8               java/lang/Class
+   #62 = Utf8               java.util.List
+   #63 = NameAndType        #97:#96       //  forName:(Ljava/lang/String;)Ljava/lang/Class;
+   #64 = NameAndType        #98:#99       //  getConstructor:([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
+   #65 = Utf8               java/lang/Object
+   #66 = Class              #100          //  java/lang/reflect/Constructor
+   #67 = NameAndType        #101:#102     //  newInstance:([Ljava/lang/Object;)Ljava/lang/Object;
+   #68 = Utf8               java/lang/Runnable
+   #69 = NameAndType        #32:#33       //  pool:Ljava/util/concurrent/ExecutorService;
+   #70 = Class              #103          //  java/util/concurrent/ExecutorService
+   #71 = NameAndType        #104:#105     //  submit:(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
+   #72 = NameAndType        #106:#107     //  iterator:()Ljava/util/Iterator;
+   #73 = Class              #82           //  java/util/Iterator
+   #74 = NameAndType        #108:#109     //  hasNext:()Z
+   #75 = NameAndType        #110:#111     //  next:()Ljava/lang/Object;
+   #76 = Utf8               java/util/concurrent/Future
+   #77 = NameAndType        #112:#111     //  get:()Ljava/lang/Object;
+   #78 = NameAndType        #112:#113     //  get:(I)Ljava/lang/Object;
+   #79 = Utf8               java/lang/Double
+   #80 = Utf8               fr/yimgo/testasm/ParallelSqrt
+   #81 = Utf8               java/util/List
+   #82 = Utf8               java/util/Iterator
+   #83 = Utf8               java/lang/Throwable
+   #84 = Utf8               valueOf
+   #85 = Utf8               (D)Ljava/lang/Double;
+   #86 = Utf8               (I)Ljava/lang/Integer;
+   #87 = Utf8               add
+   #88 = Utf8               (Ljava/lang/Object;)Z
+   #89 = Utf8               (I)V
+   #90 = Utf8               intValue
+   #91 = Utf8               ()I
+   #92 = Utf8               java/lang/ClassLoader
+   #93 = Utf8               getSystemClassLoader
+   #94 = Utf8               ()Ljava/lang/ClassLoader;
+   #95 = Utf8               loadClass
+   #96 = Utf8               (Ljava/lang/String;)Ljava/lang/Class;
+   #97 = Utf8               forName
+   #98 = Utf8               getConstructor
+   #99 = Utf8               ([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
+  #100 = Utf8               java/lang/reflect/Constructor
+  #101 = Utf8               newInstance
+  #102 = Utf8               ([Ljava/lang/Object;)Ljava/lang/Object;
+  #103 = Utf8               java/util/concurrent/ExecutorService
+  #104 = Utf8               submit
+  #105 = Utf8               (Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
+  #106 = Utf8               iterator
+  #107 = Utf8               ()Ljava/util/Iterator;
+  #108 = Utf8               hasNext
+  #109 = Utf8               ()Z
+  #110 = Utf8               next
+  #111 = Utf8               ()Ljava/lang/Object;
+  #112 = Utf8               get
+  #113 = Utf8               (I)Ljava/lang/Object;
 {
   public java.util.concurrent.ExecutorService pool;
     descriptor: Ljava/util/concurrent/ExecutorService;
@@ -124,109 +140,117 @@ Constant pool:
     flags: ACC_PUBLIC
     Code:
       stack=5, locals=8, args_size=2
-         0: new           #2                  // class java/lang/Double
-         3: dup           
-         4: dconst_0      
-         5: invokespecial #3                  // Method java/lang/Double."<init>":(D)V
-         8: astore_2      
-         9: new           #4                  // class java/util/ArrayList
-        12: dup           
-        13: invokespecial #5                  // Method java/util/ArrayList."<init>":()V
-        16: astore_3      
-        17: iconst_0      
-        18: istore        4
-        20: iload         4
-        22: iload_1       
-        23: if_icmpge     163
-        26: invokestatic  #6                  // Method java/lang/ClassLoader.getSystemClassLoader:()Ljava/lang/ClassLoader;
-        29: ldc           #7                  // String fr.yimgo.testasm.ParallelSqrtInner
-        31: invokevirtual #8                  // Method java/lang/ClassLoader.loadClass:(Ljava/lang/String;)Ljava/lang/Class;
-        34: astore        5
-        36: new           #4                  // class java/util/ArrayList
-        39: dup           
-        40: invokespecial #5                  // Method java/util/ArrayList."<init>":()V
-        43: astore        6
-        45: aload         6
-        47: aload_0       
-        48: invokeinterface #9,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-        53: pop           
-        54: aload         6
-        56: new           #10                 // class java/lang/Integer
-        59: dup           
-        60: iload_1       
-        61: invokespecial #11                 // Method java/lang/Integer."<init>":(I)V
-        64: invokeinterface #9,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-        69: pop           
-        70: aload         6
-        72: aload_2       
-        73: invokeinterface #9,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-        78: pop           
-        79: aload         6
-        81: aload_3       
-        82: invokeinterface #9,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-        87: pop           
-        88: aload         6
-        90: new           #10                 // class java/lang/Integer
-        93: dup           
-        94: iload         4
-        96: invokespecial #11                 // Method java/lang/Integer."<init>":(I)V
-        99: invokeinterface #9,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-       104: pop           
-       105: aload         5
-       107: iconst_1      
-       108: anewarray     #12                 // class java/lang/Class
-       111: dup           
-       112: iconst_0      
-       113: ldc           #13                 // String java.util.List
-       115: invokestatic  #14                 // Method java/lang/Class.forName:(Ljava/lang/String;)Ljava/lang/Class;
-       118: aastore       
-       119: invokevirtual #15                 // Method java/lang/Class.getConstructor:([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
-       122: iconst_1      
-       123: anewarray     #16                 // class java/lang/Object
-       126: dup           
-       127: iconst_0      
-       128: aload         6
-       130: aastore       
-       131: invokevirtual #17                 // Method java/lang/reflect/Constructor.newInstance:([Ljava/lang/Object;)Ljava/lang/Object;
-       134: checkcast     #18                 // class java/lang/Runnable
-       137: astore        7
-       139: aload_3       
-       140: aload_0       
-       141: getfield      #19                 // Field pool:Ljava/util/concurrent/ExecutorService;
-       144: aload         7
-       146: invokeinterface #20,  2           // InterfaceMethod java/util/concurrent/ExecutorService.submit:(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
-       151: invokeinterface #9,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-       156: pop           
-       157: iinc          4, 1
-       160: goto          20
-       163: aload_3       
-       164: invokeinterface #21,  1           // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
-       169: astore        4
-       171: aload         4
-       173: invokeinterface #22,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
-       178: ifeq          204
-       181: aload         4
-       183: invokeinterface #23,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
-       188: checkcast     #24                 // class java/util/concurrent/Future
-       191: astore        5
-       193: aload         5
-       195: invokeinterface #25,  1           // InterfaceMethod java/util/concurrent/Future.get:()Ljava/lang/Object;
-       200: pop           
-       201: goto          171
-       204: aload_2       
-       205: areturn       
+         0: dconst_0      
+         1: invokestatic  #2                  // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
+         4: astore_2      
+         5: new           #3                  // class java/util/ArrayList
+         8: dup           
+         9: invokespecial #4                  // Method java/util/ArrayList."<init>":()V
+        12: astore_3      
+        13: iconst_0      
+        14: invokestatic  #5                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        17: astore        4
+        19: new           #6                  // class java/util/concurrent/CopyOnWriteArrayList
+        22: dup           
+        23: invokespecial #7                  // Method java/util/concurrent/CopyOnWriteArrayList."<init>":()V
+        26: astore        5
+        28: aload         5
+        30: aload_0       
+        31: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        36: pop           
+        37: aload         5
+        39: new           #9                  // class java/lang/Integer
+        42: dup           
+        43: iload_1       
+        44: invokespecial #10                 // Method java/lang/Integer."<init>":(I)V
+        47: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        52: pop           
+        53: aload         5
+        55: aload_2       
+        56: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        61: pop           
+        62: aload         5
+        64: aload_3       
+        65: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        70: pop           
+        71: aload         5
+        73: aload         4
+        75: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        80: pop           
+        81: aload         4
+        83: invokevirtual #11                 // Method java/lang/Integer.intValue:()I
+        86: iload_1       
+        87: if_icmpge     167
+        90: invokestatic  #12                 // Method java/lang/ClassLoader.getSystemClassLoader:()Ljava/lang/ClassLoader;
+        93: ldc           #13                 // String fr.yimgo.testasm.ParallelSqrtInner
+        95: invokevirtual #14                 // Method java/lang/ClassLoader.loadClass:(Ljava/lang/String;)Ljava/lang/Class;
+        98: astore        6
+       100: aload         6
+       102: iconst_1      
+       103: anewarray     #15                 // class java/lang/Class
+       106: dup           
+       107: iconst_0      
+       108: ldc           #16                 // String java.util.List
+       110: invokestatic  #17                 // Method java/lang/Class.forName:(Ljava/lang/String;)Ljava/lang/Class;
+       113: aastore       
+       114: invokevirtual #18                 // Method java/lang/Class.getConstructor:([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
+       117: iconst_1      
+       118: anewarray     #19                 // class java/lang/Object
+       121: dup           
+       122: iconst_0      
+       123: aload         5
+       125: aastore       
+       126: invokevirtual #20                 // Method java/lang/reflect/Constructor.newInstance:([Ljava/lang/Object;)Ljava/lang/Object;
+       129: checkcast     #21                 // class java/lang/Runnable
+       132: astore        7
+       134: aload_3       
+       135: aload_0       
+       136: getfield      #22                 // Field pool:Ljava/util/concurrent/ExecutorService;
+       139: aload         7
+       141: invokeinterface #23,  2           // InterfaceMethod java/util/concurrent/ExecutorService.submit:(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;
+       146: invokeinterface #8,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       151: pop           
+       152: aload         4
+       154: invokevirtual #11                 // Method java/lang/Integer.intValue:()I
+       157: iconst_1      
+       158: iadd          
+       159: invokestatic  #5                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       162: astore        4
+       164: goto          81
+       167: aload_3       
+       168: invokeinterface #24,  1           // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+       173: astore        6
+       175: aload         6
+       177: invokeinterface #25,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
+       182: ifeq          208
+       185: aload         6
+       187: invokeinterface #26,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       192: checkcast     #27                 // class java/util/concurrent/Future
+       195: astore        7
+       197: aload         7
+       199: invokeinterface #28,  1           // InterfaceMethod java/util/concurrent/Future.get:()Ljava/lang/Object;
+       204: pop           
+       205: goto          175
+       208: aload         5
+       210: iconst_2      
+       211: invokeinterface #29,  2           // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+       216: checkcast     #30                 // class java/lang/Double
+       219: astore_2      
+       220: aload_2       
+       221: areturn       
       StackMapTable: number_of_entries = 4
-           frame_type = 254 /* append */
-          offset_delta = 20
-          locals = [ class java/lang/Double, class java/util/List, int ]
+           frame_type = 255 /* full_frame */
+          offset_delta = 81
+          locals = [ class fr/yimgo/testasm/ParallelSqrt, int, class java/lang/Double, class java/util/List, class java/lang/Integer, class java/util/List ]
+          stack = []
+           frame_type = 251 /* same_frame_extended */
+          offset_delta = 85
+           frame_type = 252 /* append */
+          offset_delta = 7
+          locals = [ class java/util/Iterator ]
              frame_type = 250 /* chop */
-            offset_delta = 142
-             frame_type = 252 /* append */
-            offset_delta = 7
-            locals = [ class java/util/Iterator ]
-               frame_type = 250 /* chop */
-              offset_delta = 32
+            offset_delta = 32
 
-        Exceptions:
-          throws java.lang.Throwable
-    }
+      Exceptions:
+        throws java.lang.Throwable
+  }

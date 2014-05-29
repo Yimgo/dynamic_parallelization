@@ -1,53 +1,70 @@
 // javap -c -p -s -l -verbose build/fr/yimgo/testasm/SequentialSqrt.class
 Classfile /home/guillaume/devel/Yimgo/test_asm/build/fr/yimgo/testasm/SequentialSqrt.class
-  Last modified May 22, 2014; size 555 bytes
-  MD5 checksum 1573f8a3f094a6f7959440ced87ce42c
+  Last modified May 29, 2014; size 821 bytes
+  MD5 checksum 45488a7003d2dde06e34277ac1694c4a
 public class fr.yimgo.testasm.SequentialSqrt
   minor version: 0
   major version: 52
   flags: ACC_PUBLIC, ACC_SUPER
 Constant pool:
-   #1 = Methodref          #10.#19        //  java/lang/Object."<init>":()V
-   #2 = Class              #20            //  java/lang/Double
-   #3 = Methodref          #2.#21         //  java/lang/Double."<init>":(D)V
-   #4 = Methodref          #22.#23        //  java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
-   #5 = Methodref          #22.#24        //  java/lang/Integer.intValue:()I
-   #6 = Methodref          #2.#25         //  java/lang/Double.doubleValue:()D
-   #7 = Methodref          #26.#27        //  java/lang/Math.sqrt:(D)D
-   #8 = Methodref          #2.#28         //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
-   #9 = Class              #29            //  fr/yimgo/testasm/SequentialSqrt
-  #10 = Class              #30            //  java/lang/Object
-  #11 = Utf8               <init>
-  #12 = Utf8               ()V
-  #13 = Utf8               Code
-  #14 = Utf8               sqrt
-  #15 = Utf8               (Ljava/lang/Integer;)Ljava/lang/Double;
-  #16 = Utf8               StackMapTable
-  #17 = Class              #20            //  java/lang/Double
-  #18 = Class              #31            //  java/lang/Integer
-  #19 = NameAndType        #11:#12        //  "<init>":()V
-  #20 = Utf8               java/lang/Double
-  #21 = NameAndType        #11:#32        //  "<init>":(D)V
-  #22 = Class              #31            //  java/lang/Integer
-  #23 = NameAndType        #33:#34        //  valueOf:(I)Ljava/lang/Integer;
-  #24 = NameAndType        #35:#36        //  intValue:()I
-  #25 = NameAndType        #37:#38        //  doubleValue:()D
-  #26 = Class              #39            //  java/lang/Math
-  #27 = NameAndType        #14:#40        //  sqrt:(D)D
-  #28 = NameAndType        #33:#41        //  valueOf:(D)Ljava/lang/Double;
-  #29 = Utf8               fr/yimgo/testasm/SequentialSqrt
-  #30 = Utf8               java/lang/Object
-  #31 = Utf8               java/lang/Integer
-  #32 = Utf8               (D)V
-  #33 = Utf8               valueOf
-  #34 = Utf8               (I)Ljava/lang/Integer;
-  #35 = Utf8               intValue
-  #36 = Utf8               ()I
-  #37 = Utf8               doubleValue
-  #38 = Utf8               ()D
-  #39 = Utf8               java/lang/Math
-  #40 = Utf8               (D)D
-  #41 = Utf8               (D)Ljava/lang/Double;
+   #1 = Methodref          #16.#25        //  java/lang/Object."<init>":()V
+   #2 = Class              #26            //  java/lang/Double
+   #3 = Methodref          #2.#27         //  java/lang/Double."<init>":(D)V
+   #4 = Methodref          #28.#29        //  java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+   #5 = Methodref          #28.#30        //  java/lang/Integer.intValue:()I
+   #6 = Class              #31            //  java/lang/StringBuilder
+   #7 = Methodref          #6.#25         //  java/lang/StringBuilder."<init>":()V
+   #8 = Methodref          #6.#32         //  java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+   #9 = String             #33            //   
+  #10 = Methodref          #6.#34         //  java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  #11 = Methodref          #6.#35         //  java/lang/StringBuilder.toString:()Ljava/lang/String;
+  #12 = Methodref          #36.#37        //  org/pmw/tinylog/Logger.trace:(Ljava/lang/String;)V
+  #13 = Methodref          #2.#38         //  java/lang/Double.doubleValue:()D
+  #14 = Methodref          #2.#39         //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
+  #15 = Class              #40            //  fr/yimgo/testasm/SequentialSqrt
+  #16 = Class              #41            //  java/lang/Object
+  #17 = Utf8               <init>
+  #18 = Utf8               ()V
+  #19 = Utf8               Code
+  #20 = Utf8               sqrt
+  #21 = Utf8               (Ljava/lang/Integer;)Ljava/lang/Double;
+  #22 = Utf8               StackMapTable
+  #23 = Class              #26            //  java/lang/Double
+  #24 = Class              #42            //  java/lang/Integer
+  #25 = NameAndType        #17:#18        //  "<init>":()V
+  #26 = Utf8               java/lang/Double
+  #27 = NameAndType        #17:#43        //  "<init>":(D)V
+  #28 = Class              #42            //  java/lang/Integer
+  #29 = NameAndType        #44:#45        //  valueOf:(I)Ljava/lang/Integer;
+  #30 = NameAndType        #46:#47        //  intValue:()I
+  #31 = Utf8               java/lang/StringBuilder
+  #32 = NameAndType        #48:#49        //  append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+  #33 = Utf8                
+  #34 = NameAndType        #48:#50        //  append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  #35 = NameAndType        #51:#52        //  toString:()Ljava/lang/String;
+  #36 = Class              #53            //  org/pmw/tinylog/Logger
+  #37 = NameAndType        #54:#55        //  trace:(Ljava/lang/String;)V
+  #38 = NameAndType        #56:#57        //  doubleValue:()D
+  #39 = NameAndType        #44:#58        //  valueOf:(D)Ljava/lang/Double;
+  #40 = Utf8               fr/yimgo/testasm/SequentialSqrt
+  #41 = Utf8               java/lang/Object
+  #42 = Utf8               java/lang/Integer
+  #43 = Utf8               (D)V
+  #44 = Utf8               valueOf
+  #45 = Utf8               (I)Ljava/lang/Integer;
+  #46 = Utf8               intValue
+  #47 = Utf8               ()I
+  #48 = Utf8               append
+  #49 = Utf8               (Ljava/lang/Object;)Ljava/lang/StringBuilder;
+  #50 = Utf8               (Ljava/lang/String;)Ljava/lang/StringBuilder;
+  #51 = Utf8               toString
+  #52 = Utf8               ()Ljava/lang/String;
+  #53 = Utf8               org/pmw/tinylog/Logger
+  #54 = Utf8               trace
+  #55 = Utf8               (Ljava/lang/String;)V
+  #56 = Utf8               doubleValue
+  #57 = Utf8               ()D
+  #58 = Utf8               (D)Ljava/lang/Double;
 {
   public fr.yimgo.testasm.SequentialSqrt();
     descriptor: ()V
@@ -75,30 +92,40 @@ Constant pool:
         15: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
         18: aload_1       
         19: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
-        22: if_icmpge     55
-        25: aload_2       
-        26: invokevirtual #6                  // Method java/lang/Double.doubleValue:()D
-        29: aload_3       
-        30: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
-        33: i2d           
-        34: invokestatic  #7                  // Method java/lang/Math.sqrt:(D)D
-        37: dadd          
-        38: invokestatic  #8                  // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
-        41: astore_2      
-        42: aload_3       
-        43: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
-        46: iconst_1      
-        47: iadd          
-        48: invokestatic  #4                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
-        51: astore_3      
-        52: goto          14
-        55: aload_2       
-        56: areturn       
+        22: if_icmpge     78
+        25: new           #6                  // class java/lang/StringBuilder
+        28: dup           
+        29: invokespecial #7                  // Method java/lang/StringBuilder."<init>":()V
+        32: aload_3       
+        33: invokevirtual #8                  // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        36: ldc           #9                  // String  
+        38: invokevirtual #10                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        41: aload_2       
+        42: invokevirtual #8                  // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+        45: invokevirtual #11                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        48: invokestatic  #12                 // Method org/pmw/tinylog/Logger.trace:(Ljava/lang/String;)V
+        51: aload_2       
+        52: invokevirtual #13                 // Method java/lang/Double.doubleValue:()D
+        55: aload_3       
+        56: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
+        59: i2d           
+        60: dadd          
+        61: invokestatic  #14                 // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
+        64: astore_2      
+        65: aload_3       
+        66: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
+        69: iconst_1      
+        70: iadd          
+        71: invokestatic  #4                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        74: astore_3      
+        75: goto          14
+        78: aload_2       
+        79: areturn       
       StackMapTable: number_of_entries = 2
            frame_type = 253 /* append */
           offset_delta = 14
           locals = [ class java/lang/Double, class java/lang/Integer ]
              frame_type = 250 /* chop */
-            offset_delta = 40
+            offset_delta = 63
 
   }

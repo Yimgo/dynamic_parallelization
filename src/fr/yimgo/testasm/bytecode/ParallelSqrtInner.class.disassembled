@@ -1,63 +1,62 @@
 // javap -c -p -s -l -verbose build/fr/yimgo/testasm/ParallelSqrtInner.class
 Classfile /home/guillaume/devel/Yimgo/test_asm/build/fr/yimgo/testasm/ParallelSqrtInner.class
-  Last modified May 22, 2014; size 701 bytes
-  MD5 checksum 91e6cf5fa1b4736967c8a84892fc3269
+  Last modified May 29, 2014; size 741 bytes
+  MD5 checksum ba35e40e6d8ecf0b8fbb99a34cefd370
 class fr.yimgo.testasm.ParallelSqrtInner implements java.lang.Runnable
   minor version: 0
   major version: 52
   flags: ACC_SUPER
 Constant pool:
-   #1 = Methodref          #11.#23        //  java/lang/Object."<init>":()V
-   #2 = Fieldref           #10.#24        //  fr/yimgo/testasm/ParallelSqrtInner.frame:Ljava/util/List;
-   #3 = InterfaceMethodref #25.#26        //  java/util/List.get:(I)Ljava/lang/Object;
-   #4 = Class              #27            //  java/lang/Double
-   #5 = Methodref          #4.#28         //  java/lang/Double.doubleValue:()D
-   #6 = Class              #29            //  java/lang/Integer
-   #7 = Methodref          #6.#30         //  java/lang/Integer.intValue:()I
-   #8 = Methodref          #4.#31         //  java/lang/Double.valueOf:(D)Ljava/lang/Double;
-   #9 = InterfaceMethodref #25.#32        //  java/util/List.set:(ILjava/lang/Object;)Ljava/lang/Object;
-  #10 = Class              #33            //  fr/yimgo/testasm/ParallelSqrtInner
-  #11 = Class              #34            //  java/lang/Object
-  #12 = Class              #35            //  java/lang/Runnable
-  #13 = Utf8               frame
-  #14 = Utf8               Ljava/util/List;
-  #15 = Utf8               Signature
-  #16 = Utf8               Ljava/util/List<Ljava/lang/Object;>;
-  #17 = Utf8               <init>
-  #18 = Utf8               (Ljava/util/List;)V
-  #19 = Utf8               Code
-  #20 = Utf8               (Ljava/util/List<Ljava/lang/Object;>;)V
-  #21 = Utf8               run
-  #22 = Utf8               ()V
-  #23 = NameAndType        #17:#22        //  "<init>":()V
-  #24 = NameAndType        #13:#14        //  frame:Ljava/util/List;
-  #25 = Class              #36            //  java/util/List
-  #26 = NameAndType        #37:#38        //  get:(I)Ljava/lang/Object;
-  #27 = Utf8               java/lang/Double
-  #28 = NameAndType        #39:#40        //  doubleValue:()D
+   #1 = Methodref          #9.#25         //  java/lang/Object."<init>":()V
+   #2 = Fieldref           #8.#26         //  fr/yimgo/testasm/ParallelSqrtInner.frame:Ljava/util/List;
+   #3 = InterfaceMethodref #27.#28        //  java/util/List.get:(I)Ljava/lang/Object;
+   #4 = Class              #29            //  java/lang/Integer
+   #5 = Methodref          #4.#30         //  java/lang/Integer.intValue:()I
+   #6 = Methodref          #4.#31         //  java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+   #7 = InterfaceMethodref #27.#32        //  java/util/List.set:(ILjava/lang/Object;)Ljava/lang/Object;
+   #8 = Class              #33            //  fr/yimgo/testasm/ParallelSqrtInner
+   #9 = Class              #34            //  java/lang/Object
+  #10 = Class              #35            //  java/lang/Runnable
+  #11 = Utf8               frame
+  #12 = Utf8               Ljava/util/List;
+  #13 = Utf8               Signature
+  #14 = Utf8               Ljava/util/List<Ljava/lang/Object;>;
+  #15 = Utf8               <init>
+  #16 = Utf8               (Ljava/util/List;)V
+  #17 = Utf8               Code
+  #18 = Utf8               (Ljava/util/List<Ljava/lang/Object;>;)V
+  #19 = Utf8               run
+  #20 = Utf8               ()V
+  #21 = Utf8               StackMapTable
+  #22 = Class              #33            //  fr/yimgo/testasm/ParallelSqrtInner
+  #23 = Class              #34            //  java/lang/Object
+  #24 = Class              #36            //  java/lang/Throwable
+  #25 = NameAndType        #15:#20        //  "<init>":()V
+  #26 = NameAndType        #11:#12        //  frame:Ljava/util/List;
+  #27 = Class              #37            //  java/util/List
+  #28 = NameAndType        #38:#39        //  get:(I)Ljava/lang/Object;
   #29 = Utf8               java/lang/Integer
-  #30 = NameAndType        #41:#42        //  intValue:()I
-  #31 = NameAndType        #43:#44        //  valueOf:(D)Ljava/lang/Double;
-  #32 = NameAndType        #45:#46        //  set:(ILjava/lang/Object;)Ljava/lang/Object;
+  #30 = NameAndType        #40:#41        //  intValue:()I
+  #31 = NameAndType        #42:#43        //  valueOf:(I)Ljava/lang/Integer;
+  #32 = NameAndType        #44:#45        //  set:(ILjava/lang/Object;)Ljava/lang/Object;
   #33 = Utf8               fr/yimgo/testasm/ParallelSqrtInner
   #34 = Utf8               java/lang/Object
   #35 = Utf8               java/lang/Runnable
-  #36 = Utf8               java/util/List
-  #37 = Utf8               get
-  #38 = Utf8               (I)Ljava/lang/Object;
-  #39 = Utf8               doubleValue
-  #40 = Utf8               ()D
-  #41 = Utf8               intValue
-  #42 = Utf8               ()I
-  #43 = Utf8               valueOf
-  #44 = Utf8               (D)Ljava/lang/Double;
-  #45 = Utf8               set
-  #46 = Utf8               (ILjava/lang/Object;)Ljava/lang/Object;
+  #36 = Utf8               java/lang/Throwable
+  #37 = Utf8               java/util/List
+  #38 = Utf8               get
+  #39 = Utf8               (I)Ljava/lang/Object;
+  #40 = Utf8               intValue
+  #41 = Utf8               ()I
+  #42 = Utf8               valueOf
+  #43 = Utf8               (I)Ljava/lang/Integer;
+  #44 = Utf8               set
+  #45 = Utf8               (ILjava/lang/Object;)Ljava/lang/Object;
 {
-  private final java.util.List<java.lang.Object> frame;
+  private java.util.List<java.lang.Object> frame;
     descriptor: Ljava/util/List;
-    flags: ACC_PRIVATE, ACC_FINAL
-    Signature: #16                          // Ljava/util/List<Ljava/lang/Object;>;
+    flags: ACC_PRIVATE
+    Signature: #14                          // Ljava/util/List<Ljava/lang/Object;>;
 
 
   public fr.yimgo.testasm.ParallelSqrtInner(java.util.List<java.lang.Object>);
@@ -71,32 +70,51 @@ Constant pool:
          5: aload_1       
          6: putfield      #2                  // Field frame:Ljava/util/List;
          9: return        
-    Signature: #20                          // (Ljava/util/List<Ljava/lang/Object;>;)V
+    Signature: #18                          // (Ljava/util/List<Ljava/lang/Object;>;)V
 
   public void run();
     descriptor: ()V
     flags: ACC_PUBLIC
     Code:
-      stack=6, locals=1, args_size=1
+      stack=4, locals=3, args_size=1
          0: aload_0       
          1: getfield      #2                  // Field frame:Ljava/util/List;
-         4: iconst_2      
-         5: aload_0       
-         6: getfield      #2                  // Field frame:Ljava/util/List;
-         9: iconst_2      
-        10: invokeinterface #3,  2            // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
-        15: checkcast     #4                  // class java/lang/Double
-        18: invokevirtual #5                  // Method java/lang/Double.doubleValue:()D
-        21: aload_0       
-        22: getfield      #2                  // Field frame:Ljava/util/List;
-        25: iconst_4      
-        26: invokeinterface #3,  2            // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
-        31: checkcast     #6                  // class java/lang/Integer
-        34: invokevirtual #7                  // Method java/lang/Integer.intValue:()I
-        37: i2d           
-        38: dadd          
-        39: invokestatic  #8                  // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
-        42: invokeinterface #9,  3            // InterfaceMethod java/util/List.set:(ILjava/lang/Object;)Ljava/lang/Object;
-        47: pop           
-        48: return        
+         4: dup           
+         5: astore_1      
+         6: monitorenter  
+         7: aload_0       
+         8: getfield      #2                  // Field frame:Ljava/util/List;
+        11: iconst_4      
+        12: aload_0       
+        13: getfield      #2                  // Field frame:Ljava/util/List;
+        16: iconst_4      
+        17: invokeinterface #3,  2            // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
+        22: checkcast     #4                  // class java/lang/Integer
+        25: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
+        28: iconst_1      
+        29: iadd          
+        30: invokestatic  #6                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        33: invokeinterface #7,  3            // InterfaceMethod java/util/List.set:(ILjava/lang/Object;)Ljava/lang/Object;
+        38: pop           
+        39: aload_1       
+        40: monitorexit   
+        41: goto          49
+        44: astore_2      
+        45: aload_1       
+        46: monitorexit   
+        47: aload_2       
+        48: athrow        
+        49: return        
+      Exception table:
+         from    to  target type
+             7    41    44   any
+            44    47    44   any
+      StackMapTable: number_of_entries = 2
+           frame_type = 255 /* full_frame */
+          offset_delta = 44
+          locals = [ class fr/yimgo/testasm/ParallelSqrtInner, class java/lang/Object ]
+          stack = [ class java/lang/Throwable ]
+           frame_type = 250 /* chop */
+          offset_delta = 4
+
 }

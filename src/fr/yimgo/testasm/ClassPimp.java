@@ -14,6 +14,9 @@ import org.objectweb.asm.tree.*;
 import org.pmw.tinylog.Logger;
 
 public class ClassPimp {
+  private int futuresListPosition, localesListPosition;
+  private List<Object> local;
+
   public ClassPimp() { }
 
   public void transform (ClassNode cn, String methodName) {
@@ -44,14 +47,15 @@ public class ClassPimp {
             }
           }
 
-          // add futures in initialization
-          addFuturesArray(mn, beforeLoop);
           // put inner loop code in inner class
           registerClass(createInnerClass(mn, loopStart, loopEnd));
           // remove inner code
           removeInnerCode(mn, loopStart, loopEnd);
+          // add futures in initialization
+          addFuturesArray(mn, beforeLoop);
           // dumping context
-          dumpLocalsToList(mn, loopStart);
+          dumpLocalsToList(mn, beforeLoop);
+          adaptFrameAppend(mn, beforeLoop);
           // replace inner loop code by calls to innerClass.call()
           replaceInnerCode(cn, mn, loopStart, loopEnd);
           // manage futures after the loop
@@ -82,25 +86,20 @@ public class ClassPimp {
     i.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
     i.add(new InsnNode(Opcodes.DUP));
     i.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
-    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals++)); // don't forget to increment the maxLocals value since a new local is added
+    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals));
 
-    // add the future list into the local list
-    i.next(); // seek for the frame node
-    List oldLocal = ((FrameNode) i.next()).local;
-    List newLocal = new ArrayList<Object>(oldLocal);
-    newLocal.add("java/util/List");
-    i.set(new FrameNode(Opcodes.F_APPEND, newLocal.size(), newLocal.toArray(), 0, null));
+    futuresListPosition = mn.maxLocals++;
   }
 
   public void dumpLocalsToList(MethodNode mn, AbstractInsnNode loopStart) {
     Logger.info("Dumping local frame to List");
 
     ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
-    it.next();
+    //it.next();
 
-    it.add(new TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
+    it.add(new TypeInsnNode(Opcodes.NEW, "java/util/concurrent/CopyOnWriteArrayList"));
     it.add(new InsnNode(Opcodes.DUP));
-    it.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+    it.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/concurrent/CopyOnWriteArrayList", "<init>", "()V", false));
     it.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals));
 
     for (int i = 0; i < mn.maxLocals; i += 1) {
@@ -110,7 +109,28 @@ public class ClassPimp {
       it.add(new InsnNode(Opcodes.POP));
     }
 
-    mn.maxLocals += 1;
+    localesListPosition = mn.maxLocals++;
+  }
+
+  public void adaptFrameAppend(MethodNode mn, AbstractInsnNode beforeLoop) {
+    Logger.info("Taking into account the new lists into the F_APPEND instructions");
+
+    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
+
+    i.next(); // seek for the frame node
+    try {
+      List oldLocal = ((FrameNode) i.next()).local;
+      List newLocal = new ArrayList<Object>(oldLocal);
+      newLocal.add(0, "fr/yimgo/testasm/SequentialSqrt");
+      newLocal.add(1, "java/lang/Integer");
+      newLocal.add("java/util/List");
+      newLocal.add("java/util/List");
+      local = newLocal;
+      i.set(new FrameNode(Opcodes.F_FULL, newLocal.size(), newLocal.toArray(), 0, new Object[] {}));
+    } catch (Throwable t) {
+      Logger.warn("Frame node not found");
+      Logger.trace(t);
+    }
   }
 
   public void removeInnerCode(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
@@ -119,6 +139,7 @@ public class ClassPimp {
     ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
     it.next();
 
+    // FIXME: don't remove the increment instructions
     while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
       it.next();
       it.remove();
@@ -129,13 +150,16 @@ public class ClassPimp {
     Logger.info("Adding {0}.pool as a method member", cn.name);
     cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "pool", "Ljava/util/concurrent/ExecutorService;", null, null));
 
+    int classPosition, runnablePosition;
+
     Logger.info("Replacing inner code");
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(loopEnd));
     i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "fr/yimgo/testasm/MyClassLoader", "getInstance", "()Lfr/yimgo/testasm/MyClassLoader;", false));
     i.add(new LdcInsnNode("fr.yimgo.testasm.TestInner"));
     i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "fr/yimgo/testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
     i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals));
-    i.add(new VarInsnNode(Opcodes.ALOAD, mn.maxLocals));
+    classPosition = mn.maxLocals++;
+    i.add(new VarInsnNode(Opcodes.ALOAD, classPosition));
     i.add(new InsnNode(Opcodes.ICONST_1));
     i.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Class"));
     i.add(new InsnNode(Opcodes.DUP));
@@ -148,15 +172,16 @@ public class ClassPimp {
     i.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Object"));
     i.add(new InsnNode(Opcodes.DUP));
     i.add(new InsnNode(Opcodes.ICONST_0));
-    i.add(new VarInsnNode(Opcodes.ALOAD, mn.maxLocals - 1));
+    i.add(new VarInsnNode(Opcodes.ALOAD, localesListPosition));
     i.add(new InsnNode(Opcodes.AASTORE));
     i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;", false));
     i.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/lang/Runnable"));
-    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals + 1));
-    i.add(new VarInsnNode(Opcodes.ALOAD, mn.maxLocals - 2));
+    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals));
+    runnablePosition = mn.maxLocals++;
+    i.add(new VarInsnNode(Opcodes.ALOAD, futuresListPosition));
     i.add(new VarInsnNode(Opcodes.ALOAD, 0));
     i.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "pool", "Ljava/util/concurrent/ExecutorService;"));
-    i.add(new VarInsnNode(Opcodes.ALOAD, mn.maxLocals + 1));
+    i.add(new VarInsnNode(Opcodes.ALOAD, runnablePosition));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ExecutorService", "submit", "(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;", true));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
     i.add(new InsnNode(Opcodes.POP));
@@ -165,7 +190,7 @@ public class ClassPimp {
     i.add(new InsnNode(Opcodes.ICONST_1));
     i.add(new InsnNode(Opcodes.IADD));
     i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false));
-    i.add(new VarInsnNode(Opcodes.ASTORE, 3));
+    i.add(new VarInsnNode(Opcodes.ASTORE, 3)); // FIXME: 3 ?
 
     mn.maxLocals += 2;
     mn.maxStack += 1;
@@ -175,30 +200,43 @@ public class ClassPimp {
     Logger.info("Waiting for futures termination");
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(afterLoop));
 
+    int iteratorPosition, futurePosition;
+
     i.next();
     i.next();
     i.set(new FrameNode(Opcodes.F_CHOP, 0, null, 0, null));
 
-    i.add(new VarInsnNode(Opcodes.ALOAD, mn.maxLocals - 4));
+    i.add(new VarInsnNode(Opcodes.ALOAD, futuresListPosition));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true));
-    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals - 3));
+    iteratorPosition = futuresListPosition + 2;
+    i.add(new VarInsnNode(Opcodes.ASTORE, iteratorPosition));
     LabelNode ln1 = new LabelNode(new Label());
     i.add(ln1);
     i.add(new FrameNode(Opcodes.F_APPEND, 1, new Object[] {"java/util/Iterator"}, 0, null));
-    i.add(new VarInsnNode(Opcodes.ALOAD, 5));
+    i.add(new VarInsnNode(Opcodes.ALOAD, iteratorPosition));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true));
     LabelNode ln2 = new LabelNode(new Label());
     i.add(new JumpInsnNode(Opcodes.IFEQ, ln2));
-    i.add(new VarInsnNode(Opcodes.ALOAD, 5));
+    i.add(new VarInsnNode(Opcodes.ALOAD, iteratorPosition));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true));
     i.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/util/concurrent/Future"));
-    i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals - 2));
-    i.add(new VarInsnNode(Opcodes.ALOAD, mn.maxLocals - 2));
+    futurePosition = iteratorPosition + 1;
+    i.add(new VarInsnNode(Opcodes.ASTORE, futurePosition));
+    i.add(new VarInsnNode(Opcodes.ALOAD, futurePosition));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/Future", "get", "()Ljava/lang/Object;", true));
     i.add(new InsnNode(Opcodes.POP));
     i.add(new JumpInsnNode(Opcodes.GOTO, ln1));
     i.add(ln2);
     i.add(new FrameNode(Opcodes.F_CHOP, 1, null, 0, null));
+
+    for (int j = 0; j < local.size() - 1; ++j) {
+      i.add(new VarInsnNode(Opcodes.ALOAD, localesListPosition));
+      i.add(new LdcInsnNode(new Integer(j)));
+      i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
+      i.add(new TypeInsnNode(Opcodes.CHECKCAST, (String) local.get(j)));
+      i.add(new VarInsnNode(Opcodes.ASTORE, j));
+
+    }
   }
 
   public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
@@ -231,28 +269,37 @@ public class ClassPimp {
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
     i.next();
 
+    runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    runNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "frame", "Ljava/util/List;"));
+    runNode.instructions.add(new InsnNode(Opcodes.DUP));
+    runNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 2));
+    runNode.instructions.add(new InsnNode(Opcodes.MONITORENTER));
+
+
     while (i.hasNext() && i.nextIndex() < mn.instructions.indexOf(loopEnd)) {
+      // FIXME: don't copy the increment instructions
       AbstractInsnNode in = i.next();
       if (in.getOpcode() == Opcodes.ALOAD) {
-        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-        runNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "frame", "Ljava/util/List;"));
+        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
         runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
         runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
       } else if (in.getOpcode() == Opcodes.ASTORE) {
         runNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-        runNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "frame", "Ljava/util/List;"));
+        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
         runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
         runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
         runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
         runNode.instructions.add(new InsnNode(Opcodes.POP));
       } else {
-        if (in.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+        if (in.getOpcode() == Opcodes.INVOKEVIRTUAL && (((MethodInsnNode) in).owner.equals("java/lang/Double") || ((MethodInsnNode) in).owner.equals("java/lang/Integer"))) {
           runNode.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, ((MethodInsnNode) in).owner));
         }
         runNode.instructions.add(in.clone(null));
       }
     }
+
+    runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
+    runNode.instructions.add(new InsnNode(Opcodes.MONITOREXIT));
 
     runNode.instructions.add(new InsnNode(Opcodes.RETURN));
     runNode.maxStack = 10;

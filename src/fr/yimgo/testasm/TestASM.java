@@ -18,6 +18,12 @@ public class TestASM {
       cr.accept(cn, 0);
       ClassPimp cp = new ClassPimp();
       cp.transform(cn, "sqrt");
+
+      /*ParallelSqrt p = new ParallelSqrt();
+      ExecutorService pool = Executors.newFixedThreadPool(5);
+      p.pool = pool;
+      Logger.trace(p.sqrt(7));
+      pool.shutdown();*/
     } catch (Throwable t) {
       Logger.error(t);
     }
