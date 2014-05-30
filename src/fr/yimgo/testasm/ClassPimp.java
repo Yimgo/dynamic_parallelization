@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -113,28 +114,31 @@ public class ClassPimp {
   }
 
   public void adaptFrameAppend(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop) {
-    Logger.info("Taking into account the new lists into the F_APPEND instructions");
+    Logger.info("Taking into account the new locals when declaring new frame");
 
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
 
     i.next(); // seek for the frame node
     try {
-      List oldLocal = ((FrameNode) i.next()).local;
-      List newLocal = new ArrayList<Object>(oldLocal);
+      List<Object> oldLocal = ((FrameNode) i.next()).local;
+      List<Object> newLocal = new ArrayList<Object>(oldLocal);
       newLocal.add("java/util/List");
       newLocal.add("java/util/List");
       if (newLocal.size() < mn.maxLocals) {
         newLocal.add(0, cn.name);
       }
-      Type argumentTypes[] = Type.getArgumentTypes(mn.desc);
-      for (int j = 0; newLocal.size() < mn.maxLocals; j += 1) {
-        newLocal.add(j + 1, argumentTypes[j].toString().substring(1, argumentTypes[j].toString().length() - 1));
-      }
-      local = newLocal;
+
+      List<String> argumentTypes = new ArrayList<String>();
+      Arrays.asList(Type.getArgumentTypes(mn.desc)).forEach((type) -> argumentTypes.add(type.toString().substring(1, type.toString().length() - 1)));
+      newLocal.addAll(1, argumentTypes);
+      local = new ArrayList(newLocal);
       i.set(new FrameNode(Opcodes.F_FULL, newLocal.size(), newLocal.toArray(), 0, new Object[] {}));
     } catch (Throwable t) {
-      Logger.warn("Frame node not found");
-      Logger.trace(t);
+      if (t instanceof ClassCastException) {
+        Logger.warn("Unable to find FrameNode");
+      } else {
+        Logger.error(t);
+      }
     }
   }
 
