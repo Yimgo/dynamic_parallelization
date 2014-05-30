@@ -55,7 +55,7 @@ public class ClassPimp {
           addFuturesArray(mn, beforeLoop);
           // dumping context
           dumpLocalsToList(mn, beforeLoop);
-          adaptFrameAppend(mn, beforeLoop);
+          adaptFrameAppend(cn, mn, beforeLoop);
           // replace inner loop code by calls to innerClass.call()
           replaceInnerCode(cn, mn, loopStart, loopEnd);
           // manage futures after the loop
@@ -112,7 +112,7 @@ public class ClassPimp {
     localesListPosition = mn.maxLocals++;
   }
 
-  public void adaptFrameAppend(MethodNode mn, AbstractInsnNode beforeLoop) {
+  public void adaptFrameAppend(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop) {
     Logger.info("Taking into account the new lists into the F_APPEND instructions");
 
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
@@ -121,10 +121,15 @@ public class ClassPimp {
     try {
       List oldLocal = ((FrameNode) i.next()).local;
       List newLocal = new ArrayList<Object>(oldLocal);
-      newLocal.add(0, "fr/yimgo/testasm/SequentialSqrt");
-      newLocal.add(1, "java/lang/Integer");
       newLocal.add("java/util/List");
       newLocal.add("java/util/List");
+      if (newLocal.size() < mn.maxLocals) {
+        newLocal.add(0, cn.name);
+      }
+      Type argumentTypes[] = Type.getArgumentTypes(mn.desc);
+      for (int j = 0; newLocal.size() < mn.maxLocals; j += 1) {
+        newLocal.add(j + 1, argumentTypes[j].toString().substring(1, argumentTypes[j].toString().length() - 1));
+      }
       local = newLocal;
       i.set(new FrameNode(Opcodes.F_FULL, newLocal.size(), newLocal.toArray(), 0, new Object[] {}));
     } catch (Throwable t) {
