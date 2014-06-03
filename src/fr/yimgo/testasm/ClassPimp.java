@@ -5,12 +5,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.AbstractMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.analysis.*;
 
 import org.pmw.tinylog.Logger;
 
@@ -51,7 +56,7 @@ public class ClassPimp {
           // put inner loop code in inner class
           registerClass(createInnerClass(mn, loopStart, loopEnd));
           // remove inner code
-          removeInnerCode(mn, loopStart, loopEnd);
+          removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd);
           // add futures in initialization
           addFuturesArray(mn, beforeLoop);
           // dumping context
@@ -142,16 +147,64 @@ public class ClassPimp {
     }
   }
 
-  public void removeInnerCode(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
+  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
     Logger.info("Removing old inner code");
+
+    /* determine the instructions to keep */
+    Analyzer a = new Analyzer(new SourceInterpreter());
+    Frame[] frames;
+
+    try {
+      frames = a.analyze(cn.name, mn);
+    } catch (AnalyzerException e) {
+      Logger.error(e);
+      return;
+    }
+
+    Set<AbstractInsnNode> s = new HashSet<AbstractInsnNode>();
+
+    for (int i = mn.instructions.indexOf(beforeLoop) + 1; i < mn.instructions.indexOf(loopStart); ++i) {
+      AbstractInsnNode ain = mn.instructions.get(i);
+      if (ain.getOpcode() == Opcodes.ALOAD) {
+        s.addAll(((SourceValue) frames[i].getLocal(((VarInsnNode) ain).var)).insns);
+      }
+    }
+
+    List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> ranges = new ArrayList();
+
+    for (int i = mn.instructions.indexOf(loopStart) + 1; i < mn.instructions.indexOf(loopEnd); ++i) {
+      AbstractInsnNode ain = mn.instructions.get(i);
+      if (s.contains(ain)) {
+        for (int j = i; j > mn.instructions.indexOf(loopStart); --j) {
+          AbstractInsnNode jain = mn.instructions.get(j);
+          if (frames[j].getStackSize() == frames[i + 1].getStackSize()) {
+            ranges.add(new AbstractMap.SimpleEntry<AbstractInsnNode, AbstractInsnNode>(mn.instructions.get(j), ain));
+            break;
+          }
+        }
+      }
+    }
 
     ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
     it.next();
 
-    // FIXME: don't remove the increment instructions
     while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
-      it.next();
-      it.remove();
+      AbstractInsnNode ain = it.next();
+      Iterator<Map.Entry<AbstractInsnNode, AbstractInsnNode>> itt = ranges.iterator();
+      boolean remove = true;
+      while (itt.hasNext()) {
+        Map.Entry<AbstractInsnNode, AbstractInsnNode> entry = itt.next();
+        if (mn.instructions.indexOf(ain) >= mn.instructions.indexOf(entry.getKey()) && mn.instructions.indexOf(ain) <= mn.instructions.indexOf(entry.getValue())) {
+          remove = false;
+        }
+      }
+
+      if (remove) {
+        it.remove();
+        Logger.trace("Removing {0}", ain);
+      } else {
+        Logger.trace("Keeping {0}", ain);
+      }
     }
   }
 
@@ -194,12 +247,6 @@ public class ClassPimp {
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ExecutorService", "submit", "(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;", true));
     i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
     i.add(new InsnNode(Opcodes.POP));
-    i.add(new VarInsnNode(Opcodes.ALOAD, 3));
-    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false));
-    i.add(new InsnNode(Opcodes.ICONST_1));
-    i.add(new InsnNode(Opcodes.IADD));
-    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false));
-    i.add(new VarInsnNode(Opcodes.ASTORE, 3)); // FIXME: 3 ?
 
     mn.maxLocals += 2;
     mn.maxStack += 1;
