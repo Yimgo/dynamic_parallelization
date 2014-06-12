@@ -39,7 +39,7 @@ public class ParallelSqrt {
 class ParallelSqrtInner implements Runnable {
   private List<Object> frame;
   public ParallelSqrtInner(List<Object> f) {
-    frame = f;
+    frame = new CopyOnWriteArrayList(f);
   }
   public void run() {
     synchronized (frame) {

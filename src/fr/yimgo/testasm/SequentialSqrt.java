@@ -8,8 +8,7 @@ public class SequentialSqrt {
     Double sum = new Double(0.0);
 
     for (Integer i = 0; i < n; i += 1) {
-      Logger.trace(i + " " + sum);
-      sum += (double) i;
+      System.out.println(i);
     }
 
     return sum;

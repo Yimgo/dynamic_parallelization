@@ -53,10 +53,11 @@ public class ClassPimp {
             }
           }
 
+          List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> incrementSections = analyzeIncrement(cn, mn, beforeLoop, loopStart, loopEnd, afterLoop);
           // put inner loop code in inner class
-          registerClass(createInnerClass(mn, loopStart, loopEnd));
+          registerClass(createInnerClass(mn, loopStart, loopEnd, incrementSections.get(0)));
           // remove inner code
-          removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd);
+          removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, incrementSections.get(0));
           // add futures in initialization
           addFuturesArray(mn, beforeLoop);
           // dumping context
@@ -147,9 +148,42 @@ public class ClassPimp {
     }
   }
 
-  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
+  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section) {
     Logger.info("Removing old inner code");
 
+    ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
+    it.next();
+
+    while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
+      AbstractInsnNode ain = it.next();
+      if (mn.instructions.indexOf(ain) < mn.instructions.indexOf(section.getKey()) || mn.instructions.indexOf(ain) > mn.instructions.indexOf(section.getValue())) {
+        it.remove();
+      }
+    }
+
+    /* replicate stores to locale variables list */
+
+    it = mn.instructions.iterator(mn.instructions.indexOf(section.getKey()));
+
+    while (it.hasNext() && it.nextIndex() <= mn.instructions.indexOf(section.getValue())) {
+      AbstractInsnNode ain = it.next();
+      if (ain.getOpcode() == Opcodes.ASTORE) {
+        it.remove();
+        it.add(new VarInsnNode(Opcodes.ALOAD, 5));
+        it.add(new InsnNode(Opcodes.DUP_X1));
+        it.add(new InsnNode(Opcodes.POP));
+        it.add(new LdcInsnNode(new Integer(((VarInsnNode) ain).var)));
+        it.add(new InsnNode(Opcodes.DUP_X1));
+        it.add(new InsnNode(Opcodes.POP));
+        it.add(new InsnNode(Opcodes.DUP));
+        it.add(new VarInsnNode(Opcodes.ASTORE, ((VarInsnNode) ain).var));
+        it.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
+        it.add(new InsnNode(Opcodes.POP));
+      }
+    }
+  }
+
+  public List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> analyzeIncrement(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, AbstractInsnNode afterLoop) {
     /* determine the instructions to keep */
     Analyzer a = new Analyzer(new SourceInterpreter());
     Frame[] frames;
@@ -158,54 +192,34 @@ public class ClassPimp {
       frames = a.analyze(cn.name, mn);
     } catch (AnalyzerException e) {
       Logger.error(e);
-      return;
+      return null;
     }
 
-    Set<AbstractInsnNode> s = new HashSet<AbstractInsnNode>();
+    Set<AbstractInsnNode> loadNodes = new HashSet<AbstractInsnNode>();
 
     for (int i = mn.instructions.indexOf(beforeLoop) + 1; i < mn.instructions.indexOf(loopStart); ++i) {
       AbstractInsnNode ain = mn.instructions.get(i);
       if (ain.getOpcode() == Opcodes.ALOAD) {
-        s.addAll(((SourceValue) frames[i].getLocal(((VarInsnNode) ain).var)).insns);
+        loadNodes.addAll(((SourceValue) frames[i].getLocal(((VarInsnNode) ain).var)).insns);
       }
     }
 
-    List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> ranges = new ArrayList();
+    List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> sections = new ArrayList();
 
     for (int i = mn.instructions.indexOf(loopStart) + 1; i < mn.instructions.indexOf(loopEnd); ++i) {
       AbstractInsnNode ain = mn.instructions.get(i);
-      if (s.contains(ain)) {
+      if (loadNodes.contains(ain)) {
         for (int j = i; j > mn.instructions.indexOf(loopStart); --j) {
           AbstractInsnNode jain = mn.instructions.get(j);
           if (frames[j].getStackSize() == frames[i + 1].getStackSize()) {
-            ranges.add(new AbstractMap.SimpleEntry<AbstractInsnNode, AbstractInsnNode>(mn.instructions.get(j), ain));
+            sections.add(new AbstractMap.SimpleEntry<AbstractInsnNode, AbstractInsnNode>(mn.instructions.get(j), ain));
             break;
           }
         }
       }
     }
 
-    ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
-    it.next();
-
-    while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
-      AbstractInsnNode ain = it.next();
-      Iterator<Map.Entry<AbstractInsnNode, AbstractInsnNode>> itt = ranges.iterator();
-      boolean remove = true;
-      while (itt.hasNext()) {
-        Map.Entry<AbstractInsnNode, AbstractInsnNode> entry = itt.next();
-        if (mn.instructions.indexOf(ain) >= mn.instructions.indexOf(entry.getKey()) && mn.instructions.indexOf(ain) <= mn.instructions.indexOf(entry.getValue())) {
-          remove = false;
-        }
-      }
-
-      if (remove) {
-        it.remove();
-        Logger.trace("Removing {0}", ain);
-      } else {
-        Logger.trace("Keeping {0}", ain);
-      }
-    }
+    return sections;
   }
 
   public void replaceInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
@@ -295,7 +309,7 @@ public class ClassPimp {
     }
   }
 
-  public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
+  public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section) {
     Logger.info("Creating inner class fr/yimgo/testasm/TestInner");
 
     ClassNode cn = new ClassNode();
@@ -312,10 +326,13 @@ public class ClassPimp {
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     constructorNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    constructorNode.instructions.add(new TypeInsnNode(Opcodes.NEW, "java/util/concurrent/CopyOnWriteArrayList"));
+    constructorNode.instructions.add(new InsnNode(Opcodes.DUP));
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+    constructorNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/concurrent/CopyOnWriteArrayList", "<init>", "(Ljava/util/Collection;)V", false));
     constructorNode.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, cn.name, "frame", "Ljava/util/List;"));
     constructorNode.instructions.add(new InsnNode(Opcodes.RETURN));
-    constructorNode.maxStack = 2;
+    constructorNode.maxStack = 4;
     constructorNode.maxLocals = 2;
     cn.methods.add(constructorNode);
 
@@ -327,23 +344,29 @@ public class ClassPimp {
 
     runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     runNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "frame", "Ljava/util/List;"));
-    runNode.instructions.add(new InsnNode(Opcodes.DUP));
-    runNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 2));
-    runNode.instructions.add(new InsnNode(Opcodes.MONITORENTER));
+    //runNode.instructions.add(new InsnNode(Opcodes.DUP));
+    runNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
+    //runNode.instructions.add(new InsnNode(Opcodes.MONITORENTER));
 
 
     while (i.hasNext() && i.nextIndex() < mn.instructions.indexOf(loopEnd)) {
       // FIXME: don't copy the increment instructions
       AbstractInsnNode in = i.next();
+
+      if (mn.instructions.indexOf(in) >= mn.instructions.indexOf(section.getKey()) && mn.instructions.indexOf(in) <= mn.instructions.indexOf(section.getValue())) {
+        continue;
+      }
       if (in.getOpcode() == Opcodes.ALOAD) {
-        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
+        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
         runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
         runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
       } else if (in.getOpcode() == Opcodes.ASTORE) {
-        runNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
-        runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
         runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        runNode.instructions.add(new InsnNode(Opcodes.DUP_X1));
+        runNode.instructions.add(new InsnNode(Opcodes.POP));
+        runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
+        runNode.instructions.add(new InsnNode(Opcodes.DUP_X1));
+        runNode.instructions.add(new InsnNode(Opcodes.POP));
         runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
         runNode.instructions.add(new InsnNode(Opcodes.POP));
       } else {
@@ -354,8 +377,8 @@ public class ClassPimp {
       }
     }
 
-    runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
-    runNode.instructions.add(new InsnNode(Opcodes.MONITOREXIT));
+    //runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+    //runNode.instructions.add(new InsnNode(Opcodes.MONITOREXIT));
 
     runNode.instructions.add(new InsnNode(Opcodes.RETURN));
     runNode.maxStack = 10;
