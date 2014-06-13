@@ -1,7 +1,7 @@
 // javap -c -p -s -l -verbose build/fr/yimgo/testasm/SequentialSqrt.class
 Classfile /home/guillaume/devel/Yimgo/test_asm/build/fr/yimgo/testasm/SequentialSqrt.class
-  Last modified Jun 4, 2014; size 575 bytes
-  MD5 checksum c96940a84c3cbf3e7ae47f7c4a285e6d
+  Last modified Jun 13, 2014; size 580 bytes
+  MD5 checksum 81c67639b489d7271acb592454248b67
 public class fr.yimgo.testasm.SequentialSqrt
   minor version: 0
   major version: 52
@@ -75,24 +75,27 @@ Constant pool:
         15: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
         18: aload_1       
         19: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
-        22: if_icmpge     45
+        22: if_icmpge     50
         25: getstatic     #6                  // Field java/lang/System.out:Ljava/io/PrintStream;
         28: aload_3       
         29: invokevirtual #7                  // Method java/io/PrintStream.println:(Ljava/lang/Object;)V
         32: aload_3       
         33: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
-        36: iconst_1      
-        37: iadd          
-        38: invokestatic  #4                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
-        41: astore_3      
-        42: goto          14
-        45: aload_2       
-        46: areturn       
+        36: pop           
+        37: aload_3       
+        38: invokevirtual #5                  // Method java/lang/Integer.intValue:()I
+        41: iconst_1      
+        42: iadd          
+        43: invokestatic  #4                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        46: astore_3      
+        47: goto          14
+        50: aload_2       
+        51: areturn       
       StackMapTable: number_of_entries = 2
            frame_type = 253 /* append */
           offset_delta = 14
           locals = [ class java/lang/Double, class java/lang/Integer ]
              frame_type = 250 /* chop */
-            offset_delta = 30
+            offset_delta = 35
 
   }

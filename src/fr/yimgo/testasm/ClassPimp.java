@@ -21,7 +21,6 @@ import org.pmw.tinylog.Logger;
 
 public class ClassPimp {
   private int futuresListPosition, localesListPosition;
-  private List<Object> local;
 
   public ClassPimp() { }
 
@@ -53,20 +52,23 @@ public class ClassPimp {
             }
           }
 
+          /* analysis */
           List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> incrementSections = analyzeIncrement(cn, mn, beforeLoop, loopStart, loopEnd, afterLoop);
+          List<Object> localTypes = resolveLocalTypes(cn, mn, beforeLoop);
+
           // put inner loop code in inner class
-          registerClass(createInnerClass(mn, loopStart, loopEnd, incrementSections.get(0)));
+          registerClass(createInnerClass(mn, loopStart, loopEnd, incrementSections.get(0), localTypes));
           // remove inner code
           removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, incrementSections.get(0));
           // add futures in initialization
           addFuturesArray(mn, beforeLoop);
           // dumping context
           dumpLocalsToList(mn, beforeLoop);
-          adaptFrameAppend(cn, mn, beforeLoop);
+          adaptFrameAppend(cn, mn, beforeLoop, localTypes);
           // replace inner loop code by calls to innerClass.call()
           replaceInnerCode(cn, mn, loopStart, loopEnd);
           // manage futures after the loop
-          adaptAfterCode(mn, afterLoop);
+          adaptAfterCode(mn, afterLoop, localTypes);
 
           // consistency check
           Class<?> pimped = registerClass(cn);
@@ -119,33 +121,38 @@ public class ClassPimp {
     localesListPosition = mn.maxLocals++;
   }
 
-  public void adaptFrameAppend(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop) {
+  public void adaptFrameAppend(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, List<Object> localTypes) {
     Logger.info("Taking into account the new locals when declaring new frame");
 
-    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
+    ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
+    it.next();
+    it.next(); // seek for the frame node
 
-    i.next(); // seek for the frame node
-    try {
-      List<Object> oldLocal = ((FrameNode) i.next()).local;
-      List<Object> newLocal = new ArrayList<Object>(oldLocal);
-      newLocal.add("java/util/List");
-      newLocal.add("java/util/List");
-      if (newLocal.size() < mn.maxLocals) {
-        newLocal.add(0, cn.name);
-      }
+    List<Object> newLocal = new ArrayList<Object>(localTypes);
+    newLocal.add("java/util/List");
+    newLocal.add("java/util/List");
+    it.set(new FrameNode(Opcodes.F_FULL, newLocal.size(), newLocal.toArray(), 0, new Object[] {}));
 
-      List<String> argumentTypes = new ArrayList<String>();
-      Arrays.asList(Type.getArgumentTypes(mn.desc)).forEach((type) -> argumentTypes.add(type.toString().substring(1, type.toString().length() - 1)));
-      newLocal.addAll(1, argumentTypes);
-      local = new ArrayList(newLocal);
-      i.set(new FrameNode(Opcodes.F_FULL, newLocal.size(), newLocal.toArray(), 0, new Object[] {}));
-    } catch (Throwable t) {
-      if (t instanceof ClassCastException) {
-        Logger.warn("Unable to find FrameNode");
-      } else {
-        Logger.error(t);
+  }
+
+  public List<Object> resolveLocalTypes(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop) {
+    ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(beforeLoop));
+    it.next();
+
+    AbstractInsnNode ain = it.next();
+    if (ain instanceof FrameNode) {
+      FrameNode fn = (FrameNode) ain;
+      if (fn.type == Opcodes.F_APPEND) {
+        List<Object> localTypes = new ArrayList<Object>(fn.local);
+        localTypes.add(0, cn.name);
+        List<String> argumentTypes = new ArrayList<String>();
+        Arrays.asList(Type.getArgumentTypes(mn.desc)).forEach((type) -> argumentTypes.add(type.toString().substring(1, type.toString().length() - 1)));
+        localTypes.addAll(1, argumentTypes);
+        return localTypes;
       }
     }
+
+    return null;
   }
 
   public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section) {
@@ -266,7 +273,7 @@ public class ClassPimp {
     mn.maxStack += 1;
   }
 
-  public void adaptAfterCode(MethodNode mn, AbstractInsnNode afterLoop) {
+  public void adaptAfterCode(MethodNode mn, AbstractInsnNode afterLoop, List<Object> localTypes) {
     Logger.info("Waiting for futures termination");
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(afterLoop));
 
@@ -299,17 +306,17 @@ public class ClassPimp {
     i.add(ln2);
     i.add(new FrameNode(Opcodes.F_CHOP, 1, null, 0, null));
 
-    for (int j = 0; j < local.size() - 1; ++j) {
+    for (int j = 0; j < localTypes.size(); ++j) {
       i.add(new VarInsnNode(Opcodes.ALOAD, localesListPosition));
       i.add(new LdcInsnNode(new Integer(j)));
       i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
-      i.add(new TypeInsnNode(Opcodes.CHECKCAST, (String) local.get(j)));
+      i.add(new TypeInsnNode(Opcodes.CHECKCAST, (String) localTypes.get(j)));
       i.add(new VarInsnNode(Opcodes.ASTORE, j));
 
     }
   }
 
-  public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section) {
+  public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section, List<Object> localTypes) {
     Logger.info("Creating inner class fr/yimgo/testasm/TestInner");
 
     ClassNode cn = new ClassNode();
@@ -360,6 +367,7 @@ public class ClassPimp {
         runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
         runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
         runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
+        runNode.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, (String) localTypes.get(((VarInsnNode) in).var)));
       } else if (in.getOpcode() == Opcodes.ASTORE) {
         runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
         runNode.instructions.add(new InsnNode(Opcodes.DUP_X1));
@@ -370,9 +378,6 @@ public class ClassPimp {
         runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
         runNode.instructions.add(new InsnNode(Opcodes.POP));
       } else {
-        if (in.getOpcode() == Opcodes.INVOKEVIRTUAL && (((MethodInsnNode) in).owner.equals("java/lang/Double") || ((MethodInsnNode) in).owner.equals("java/lang/Integer"))) {
-          runNode.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, ((MethodInsnNode) in).owner));
-        }
         runNode.instructions.add(in.clone(null));
       }
     }

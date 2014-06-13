@@ -9,6 +9,7 @@ public class SequentialSqrt {
 
     for (Integer i = 0; i < n; i += 1) {
       System.out.println(i);
+      i.intValue();
     }
 
     return sum;
