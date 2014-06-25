@@ -1,4 +1,4 @@
-package fr.yimgo.testasm;
+package testasm;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -167,27 +167,6 @@ public class ClassPimp {
         it.remove();
       }
     }
-
-    /* replicate stores to locale variables list */
-
-    it = mn.instructions.iterator(mn.instructions.indexOf(section.getKey()));
-
-    while (it.hasNext() && it.nextIndex() <= mn.instructions.indexOf(section.getValue())) {
-      AbstractInsnNode ain = it.next();
-      if (ain.getOpcode() == Opcodes.ASTORE) {
-        it.remove();
-        it.add(new VarInsnNode(Opcodes.ALOAD, 5));
-        it.add(new InsnNode(Opcodes.DUP_X1));
-        it.add(new InsnNode(Opcodes.POP));
-        it.add(new LdcInsnNode(new Integer(((VarInsnNode) ain).var)));
-        it.add(new InsnNode(Opcodes.DUP_X1));
-        it.add(new InsnNode(Opcodes.POP));
-        it.add(new InsnNode(Opcodes.DUP));
-        it.add(new VarInsnNode(Opcodes.ASTORE, ((VarInsnNode) ain).var));
-        it.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
-        it.add(new InsnNode(Opcodes.POP));
-      }
-    }
   }
 
   public List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> analyzeIncrement(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, AbstractInsnNode afterLoop) {
@@ -237,9 +216,9 @@ public class ClassPimp {
 
     Logger.info("Replacing inner code");
     ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(loopEnd));
-    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "fr/yimgo/testasm/MyClassLoader", "getInstance", "()Lfr/yimgo/testasm/MyClassLoader;", false));
-    i.add(new LdcInsnNode("fr.yimgo.testasm.TestInner"));
-    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "fr/yimgo/testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
+    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "testasm/MyClassLoader", "getInstance", "()Ltestasm/MyClassLoader;", false));
+    i.add(new LdcInsnNode("testasm.TestInner"));
+    i.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
     i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals));
     classPosition = mn.maxLocals++;
     i.add(new VarInsnNode(Opcodes.ALOAD, classPosition));
@@ -261,13 +240,8 @@ public class ClassPimp {
     i.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/lang/Runnable"));
     i.add(new VarInsnNode(Opcodes.ASTORE, mn.maxLocals));
     runnablePosition = mn.maxLocals++;
-    i.add(new VarInsnNode(Opcodes.ALOAD, futuresListPosition));
-    i.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    i.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "pool", "Ljava/util/concurrent/ExecutorService;"));
     i.add(new VarInsnNode(Opcodes.ALOAD, runnablePosition));
-    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ExecutorService", "submit", "(Ljava/lang/Runnable;)Ljava/util/concurrent/Future;", true));
-    i.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
-    i.add(new InsnNode(Opcodes.POP));
+    i.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/multiverse/api/StmUtils", "atomic", "(Ljava/lang/Runnable;)V", false));
 
     mn.maxLocals += 2;
     mn.maxStack += 1;
@@ -317,12 +291,12 @@ public class ClassPimp {
   }
 
   public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section, List<Object> localTypes) {
-    Logger.info("Creating inner class fr/yimgo/testasm/TestInner");
+    Logger.info("Creating inner class testasm/TestInner");
 
     ClassNode cn = new ClassNode();
     cn.version = Opcodes.V1_8;
     cn.access = Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER;
-    cn.name = "fr/yimgo/testasm/TestInner";
+    cn.name = "testasm/TestInner";
     cn.superName = "java/lang/Object";
     cn.interfaces.add("java/lang/Runnable");
     /* TODO: determine all the values accessed by the instructions in the inner-loop. */
@@ -333,10 +307,7 @@ public class ClassPimp {
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     constructorNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    constructorNode.instructions.add(new TypeInsnNode(Opcodes.NEW, "java/util/concurrent/CopyOnWriteArrayList"));
-    constructorNode.instructions.add(new InsnNode(Opcodes.DUP));
     constructorNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    constructorNode.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/concurrent/CopyOnWriteArrayList", "<init>", "(Ljava/util/Collection;)V", false));
     constructorNode.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, cn.name, "frame", "Ljava/util/List;"));
     constructorNode.instructions.add(new InsnNode(Opcodes.RETURN));
     constructorNode.maxStack = 4;
@@ -351,18 +322,12 @@ public class ClassPimp {
 
     runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     runNode.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, cn.name, "frame", "Ljava/util/List;"));
-    //runNode.instructions.add(new InsnNode(Opcodes.DUP));
     runNode.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-    //runNode.instructions.add(new InsnNode(Opcodes.MONITORENTER));
 
 
     while (i.hasNext() && i.nextIndex() < mn.instructions.indexOf(loopEnd)) {
-      // FIXME: don't copy the increment instructions
       AbstractInsnNode in = i.next();
 
-      if (mn.instructions.indexOf(in) >= mn.instructions.indexOf(section.getKey()) && mn.instructions.indexOf(in) <= mn.instructions.indexOf(section.getValue())) {
-        continue;
-      }
       if (in.getOpcode() == Opcodes.ALOAD) {
         runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
         runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
@@ -382,10 +347,8 @@ public class ClassPimp {
       }
     }
 
-    //runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    //runNode.instructions.add(new InsnNode(Opcodes.MONITOREXIT));
-
     runNode.instructions.add(new InsnNode(Opcodes.RETURN));
+
     runNode.maxStack = 10;
     runNode.maxLocals = 10;
     cn.methods.add(runNode);

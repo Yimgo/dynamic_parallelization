@@ -1,0 +1,7 @@
+* écriture concurrentes
+  * ConcurrentArrayList mais ne suffit pas
+  * coordonner écritures + lectures: lock lecture...écriture
+  * regarder mémoire transactionnelle JVM
+  * détecter accès concurrentiels
+  * /!\ méthodes statiques/appels natifs
+*

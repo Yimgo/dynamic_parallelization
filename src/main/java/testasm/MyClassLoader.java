@@ -1,4 +1,4 @@
-package fr.yimgo.testasm;
+package testasm;
 
 import java.util.Map;
 import java.util.HashMap;

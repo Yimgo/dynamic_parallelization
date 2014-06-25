@@ -6,19 +6,21 @@
   <property name="build" location="build"/>
   <property name="asm" location="vendor/asm-all-5.0.2.jar"/>
   <property name="tinylog" location="vendor/tinylog.jar"/>
+  <property name="multiverse" location="vendor/multiverse-core-0.7.0.jar"/>
 
   <target name="compile" description="compile the source" >
-    <javac srcdir="${src}" destdir="${build}" classpath="${asm}:${tinylog}" includeantruntime="false">
+    <javac srcdir="${src}" destdir="${build}" classpath="${asm}:${tinylog}:${multiverse}" includeantruntime="false">
        <compilerarg value="-Xlint"/>
     </javac>
   </target>
 
   <target name="run" description="run the example" >
-    <java classname="fr.yimgo.testasm.TestASM" fork="true">
+    <java classname="testasm.TestASM" fork="true">
       <jvmarg value="-Dtinylog.level=trace"/>
       <classpath>
        <pathelement location="${asm}"/>
        <pathelement location="${tinylog}"/>
+       <pathelement location="${multiverse}"/>
        <pathelement path="${build}"/>
      </classpath>
     </java>

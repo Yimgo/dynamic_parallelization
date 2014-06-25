@@ -1,29 +1,24 @@
-package fr.yimgo.testasm;
+package testasm;
 
 import java.util.Arrays;
 import java.util.ListIterator;
 /* ugly, fix this asap */
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.pmw.tinylog.Logger;
 
 public class TestASM {
   public static void main(String... args) {
     try {
-      ClassReader cr = new ClassReader("fr.yimgo.testasm.SequentialSqrt");
+      ClassReader cr = new ClassReader("testasm.SequentialSqrt");
       ClassNode cn = new ClassNode();
       cr.accept(cn, 0);
       ClassPimp cp = new ClassPimp();
       cp.transform(cn, "sqrt");
 
-      /*ParallelSqrt p = new ParallelSqrt();
-      ExecutorService pool = Executors.newFixedThreadPool(5);
-      p.pool = pool;
-      Logger.trace(p.sqrt(7));
-      pool.shutdown();*/
+      /*SequentialSqrt p = new SequentialSqrt();
+      Logger.trace(p.sqrt(100));*/
     } catch (Throwable t) {
       Logger.error(t);
     }

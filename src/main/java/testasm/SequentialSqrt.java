@@ -1,17 +1,14 @@
-package fr.yimgo.testasm;
+package testasm;
 
 import org.pmw.tinylog.Logger;
 
 public class SequentialSqrt {
   public SequentialSqrt() { }
   public Double sqrt(Integer n) {
-    Double sum = new Double(0.0);
-
     for (Integer i = 0; i < n; i += 1) {
       System.out.println(i);
-      i.intValue();
     }
 
-    return sum;
+    return new Double(n * (n + 1) / 2);
   }
 }
