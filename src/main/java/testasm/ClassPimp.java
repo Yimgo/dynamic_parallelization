@@ -52,14 +52,14 @@ public class ClassPimp {
             }
           }
 
-          /* analysis */
-          List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> incrementSections = analyzeIncrement(cn, mn, beforeLoop, loopStart, loopEnd, afterLoop);
+          /* static analysis */
+          Map.Entry<AbstractInsnNode, AbstractInsnNode> independantBlock = staticAnalysis(cn, mn, beforeLoop, loopStart, loopEnd, afterLoop);
           List<Object> localTypes = resolveLocalTypes(cn, mn, beforeLoop);
 
           // put inner loop code in inner class
-          registerClass(createInnerClass(mn, loopStart, loopEnd, incrementSections.get(0), localTypes));
+          registerClass(createInnerClass(mn, loopStart, loopEnd, localTypes));
           // remove inner code
-          removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, incrementSections.get(0));
+          removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, independantBlock);
           // add futures in initialization
           addFuturesArray(mn, beforeLoop);
           // dumping context
@@ -83,6 +83,69 @@ public class ClassPimp {
         break;
       }
     }
+  }
+
+  public Map.Entry<AbstractInsnNode, AbstractInsnNode> staticAnalysis(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, AbstractInsnNode afterLoop) {
+    Logger.trace("Proceeding to static analysis of the method");
+
+    /* compute frames */
+    Analyzer a = new Analyzer(new SourceInterpreter());
+    Frame[] frames;
+
+    try {
+      frames = a.analyze(cn.name, mn);
+    } catch (AnalyzerException e) {
+      Logger.error(e);
+      return null;
+    }
+
+    /*
+      Keep the instructions that handle local variables before the comparison.
+      The frames matching these instructions will allow us to identify blocks that can be kept within the main loop.
+     */
+    Set<AbstractInsnNode> beforeComparisonVarInsnNodes = new HashSet<AbstractInsnNode>();
+
+    for (int i = mn.instructions.indexOf(beforeLoop) + 1; i < mn.instructions.indexOf(loopStart); ++i) {
+      AbstractInsnNode ain = mn.instructions.get(i);
+      if (ain instanceof VarInsnNode) {
+        beforeComparisonVarInsnNodes.add(ain);
+      }
+    }
+
+    /*
+      Compute the blocks modifying the variables accessed before the comparison.
+      For each instruction previously stored, look at the instructions in the frame and determine the blocks.
+     */
+    List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> comparisonVarUpdateBlocks = new ArrayList();
+
+    Iterator<AbstractInsnNode> nodesIt = beforeComparisonVarInsnNodes.iterator();
+    while (nodesIt.hasNext()) {
+      VarInsnNode vin = (VarInsnNode) nodesIt.next();
+      Set<AbstractInsnNode> insns = ((SourceValue) frames[mn.instructions.indexOf(vin)].getLocal(((VarInsnNode) vin).var)).insns;
+      insns.forEach((insn) -> {
+        if (mn.instructions.indexOf(insn) > mn.instructions.indexOf(beforeLoop) && mn.instructions.indexOf(insn) < mn.instructions.indexOf(afterLoop)) {
+          for (int i = mn.instructions.indexOf(insn); i > mn.instructions.indexOf(loopStart); --i) {
+            if (frames[i].getStackSize() == frames[mn.instructions.indexOf(insn) + 1].getStackSize()) {
+              comparisonVarUpdateBlocks.add(new AbstractMap.SimpleEntry<AbstractInsnNode, AbstractInsnNode>(mn.instructions.get(i), insn));
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    /*
+      Check the validity of the computed blocks.
+      At this moment, we only keep instructions if there is only one block, at the end of the loop.
+     */
+    if (comparisonVarUpdateBlocks.size() == 1 && mn.instructions.indexOf(comparisonVarUpdateBlocks.get(0).getValue()) + 1 == mn.instructions.indexOf(loopEnd)) {
+      Logger.trace("Statically resolved the cycle count.");
+      return comparisonVarUpdateBlocks.get(0);
+    } else {
+      Logger.trace("Failed to resolve statically the cycle count");
+      return null;
+    }
+
   }
 
   public void addFuturesArray(MethodNode mn, AbstractInsnNode beforeLoop) {
@@ -148,6 +211,7 @@ public class ClassPimp {
         List<String> argumentTypes = new ArrayList<String>();
         Arrays.asList(Type.getArgumentTypes(mn.desc)).forEach((type) -> argumentTypes.add(type.toString().substring(1, type.toString().length() - 1)));
         localTypes.addAll(1, argumentTypes);
+        Logger.trace(localTypes);
         return localTypes;
       }
     }
@@ -155,7 +219,7 @@ public class ClassPimp {
     return null;
   }
 
-  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section) {
+  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> keepBlock) {
     Logger.info("Removing old inner code");
 
     ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
@@ -163,49 +227,10 @@ public class ClassPimp {
 
     while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
       AbstractInsnNode ain = it.next();
-      if (mn.instructions.indexOf(ain) < mn.instructions.indexOf(section.getKey()) || mn.instructions.indexOf(ain) > mn.instructions.indexOf(section.getValue())) {
+      if (keepBlock != null && (mn.instructions.indexOf(ain) < mn.instructions.indexOf(keepBlock.getKey()) || mn.instructions.indexOf(ain) > mn.instructions.indexOf(keepBlock.getValue()))) {
         it.remove();
       }
     }
-  }
-
-  public List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> analyzeIncrement(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, AbstractInsnNode afterLoop) {
-    /* determine the instructions to keep */
-    Analyzer a = new Analyzer(new SourceInterpreter());
-    Frame[] frames;
-
-    try {
-      frames = a.analyze(cn.name, mn);
-    } catch (AnalyzerException e) {
-      Logger.error(e);
-      return null;
-    }
-
-    Set<AbstractInsnNode> loadNodes = new HashSet<AbstractInsnNode>();
-
-    for (int i = mn.instructions.indexOf(beforeLoop) + 1; i < mn.instructions.indexOf(loopStart); ++i) {
-      AbstractInsnNode ain = mn.instructions.get(i);
-      if (ain.getOpcode() == Opcodes.ALOAD) {
-        loadNodes.addAll(((SourceValue) frames[i].getLocal(((VarInsnNode) ain).var)).insns);
-      }
-    }
-
-    List<Map.Entry<AbstractInsnNode, AbstractInsnNode>> sections = new ArrayList();
-
-    for (int i = mn.instructions.indexOf(loopStart) + 1; i < mn.instructions.indexOf(loopEnd); ++i) {
-      AbstractInsnNode ain = mn.instructions.get(i);
-      if (loadNodes.contains(ain)) {
-        for (int j = i; j > mn.instructions.indexOf(loopStart); --j) {
-          AbstractInsnNode jain = mn.instructions.get(j);
-          if (frames[j].getStackSize() == frames[i + 1].getStackSize()) {
-            sections.add(new AbstractMap.SimpleEntry<AbstractInsnNode, AbstractInsnNode>(mn.instructions.get(j), ain));
-            break;
-          }
-        }
-      }
-    }
-
-    return sections;
   }
 
   public void replaceInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
@@ -290,7 +315,7 @@ public class ClassPimp {
     }
   }
 
-  public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> section, List<Object> localTypes) {
+  public ClassNode createInnerClass(MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, List<Object> localTypes) {
     Logger.info("Creating inner class testasm/TestInner");
 
     ClassNode cn = new ClassNode();
@@ -367,6 +392,25 @@ public class ClassPimp {
     ListIterator<AbstractInsnNode> i = instructions.iterator();
     while (i.hasNext()) {
       System.out.println(i.next().getOpcode());
+    }
+  }
+
+  public static void printMethod(MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, AbstractInsnNode afterLoop) {
+    ListIterator<AbstractInsnNode> lit = mn.instructions.iterator();
+
+    //Logger.trace(mn.methodName);
+    while (lit.hasNext()) {
+      AbstractInsnNode ain = lit.next();
+      if (ain.equals(beforeLoop)) {
+        Logger.trace("before loop");
+      } else if(ain.equals(loopStart)) {
+        Logger.trace("loop start");
+      } else if (ain.equals(loopEnd)) {
+        Logger.trace("loop end");
+      } else if (ain.equals(afterLoop)) {
+        Logger.trace("after loop");
+      }
+      Logger.trace(ain);
     }
   }
 }
