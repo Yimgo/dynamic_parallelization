@@ -351,24 +351,16 @@ public class ClassPimp {
 
 
     while (i.hasNext() && i.nextIndex() < mn.instructions.indexOf(loopEnd)) {
-      AbstractInsnNode in = i.next();
+      AbstractInsnNode ain = i.next();
 
-      if (in.getOpcode() == Opcodes.ALOAD) {
-        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-        runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
-        runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
-        runNode.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, (String) localTypes.get(((VarInsnNode) in).var)));
-      } else if (in.getOpcode() == Opcodes.ASTORE) {
-        runNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-        runNode.instructions.add(new InsnNode(Opcodes.DUP_X1));
-        runNode.instructions.add(new InsnNode(Opcodes.POP));
-        runNode.instructions.add(new LdcInsnNode(new Integer(((VarInsnNode) in).var)));
-        runNode.instructions.add(new InsnNode(Opcodes.DUP_X1));
-        runNode.instructions.add(new InsnNode(Opcodes.POP));
-        runNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
-        runNode.instructions.add(new InsnNode(Opcodes.POP));
+      if (ain instanceof VarInsnNode) {
+        try {
+          runNode.instructions.add(varNodeToList((VarInsnNode) ain, 1, localTypes));
+        } catch (Throwable t) {
+          // do nothing
+        }
       } else {
-        runNode.instructions.add(in.clone(null));
+        runNode.instructions.add(ain.clone(null));
       }
     }
 
@@ -398,7 +390,7 @@ public class ClassPimp {
   public static void printMethod(MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, AbstractInsnNode afterLoop) {
     ListIterator<AbstractInsnNode> lit = mn.instructions.iterator();
 
-    //Logger.trace(mn.methodName);
+    Logger.trace(mn.name);
     while (lit.hasNext()) {
       AbstractInsnNode ain = lit.next();
       if (ain.equals(beforeLoop)) {
@@ -412,5 +404,38 @@ public class ClassPimp {
       }
       Logger.trace(ain);
     }
+  }
+
+  public static InsnList varNodeToList(VarInsnNode insn, int listIndex, List<Object> localTypes) throws Exception {
+    switch (insn.getOpcode()) {
+    case Opcodes.ALOAD:
+      return loadToGet(insn, listIndex, localTypes);
+    case Opcodes.ASTORE:
+      return storeToSet(insn, listIndex);
+    default:
+      throw new Exception("Instruction not handled.");
+    }
+  }
+
+  public static InsnList loadToGet(VarInsnNode insn, int listIndex, List<Object> localTypes) {
+    InsnList instructions = new InsnList();
+    instructions.add(new VarInsnNode(Opcodes.ALOAD, listIndex));
+    instructions.add(new LdcInsnNode(new Integer(insn.var)));
+    instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true));
+    instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, (String) localTypes.get(insn.var)));
+    return instructions;
+  }
+
+  public static InsnList storeToSet(VarInsnNode insn, int listIndex) {
+    InsnList instructions = new InsnList();
+    instructions.add(new VarInsnNode(Opcodes.ALOAD, listIndex));
+    instructions.add(new InsnNode(Opcodes.DUP_X1));
+    instructions.add(new InsnNode(Opcodes.POP));
+    instructions.add(new LdcInsnNode(new Integer(insn.var)));
+    instructions.add(new InsnNode(Opcodes.DUP_X1));
+    instructions.add(new InsnNode(Opcodes.POP));
+    instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
+    instructions.add(new InsnNode(Opcodes.POP));
+    return instructions;
   }
 }
