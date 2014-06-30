@@ -8,24 +8,26 @@ readonly CLASS_PATH="build/testasm"
 readonly DISASSEMBLED_PATH="dist/disassembled"
 
 function disassemble {
-  if [[ -n ${1} ]]; then
-    local CMD=${JAVAP}" "${JAVAP_ARGS}" "${CLASS_PATH}/${1}
+  if [[ -n "${1}" ]]; then
+    local CMD="${JAVAP} ${JAVAP_ARGS} ${CLASS_PATH}/${1}"
 
     if [[ ! -d "${DISASSEMBLED_PATH}" ]]; then
-      mkdir -p ${DISASSEMBLED_PATH}
+      mkdir -p "${DISASSEMBLED_PATH}"
     fi
 
-    echo "// "${CMD} > ${DISASSEMBLED_PATH}/${1}.disassembled
-    ${CMD} >> ${DISASSEMBLED_PATH}/${1}.disassembled
+    echo "// ${CMD}" > "${DISASSEMBLED_PATH}/${1}.disassembled"
+    ${CMD} >> "${DISASSEMBLED_PATH}/${1}.disassembled"
   fi
 }
 
 if [[ -n "${1}" ]]; then
-  disassemble ${1}
+  disassemble "${1}"
 else
-  readonly classes=("ParallelSqrt.class" "ParallelSqrtInner.class" "SequentialSqrt.class")
+  readonly classes=("Base.class" "Base\$Inner.class" "Base\$Proxy.class")
   for i in "${classes[@]}";
   do
-    disassemble ${i}
+    echo "Disassembling ${i}..."
+    disassemble "${i}"
   done
+  echo "... Done."
 fi
