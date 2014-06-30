@@ -1,10 +1,10 @@
 package testasm;
 
-import java.util.Arrays;
-import java.util.ListIterator;
-/* ugly, fix this asap */
+import java.util.concurrent.Executors;
+
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.analysis.*;
 
 import org.pmw.tinylog.Logger;
 
@@ -19,6 +19,10 @@ public class TestASM {
 
       /*SequentialSqrt p = new SequentialSqrt();
       Logger.trace(p.sqrt(100));*/
+
+      /*Base b = new Base(Executors.newFixedThreadPool(100));
+      b.doRun();
+      b.pool.shutdown();*/
     } catch (Throwable t) {
       Logger.error(t);
     }

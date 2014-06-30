@@ -3,6 +3,8 @@ package testasm;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.pmw.tinylog.Logger;
+
 public class MyClassLoader extends ClassLoader {
   private static MyClassLoader instance = null;
   private Map<String, Class<?>> map;
@@ -28,6 +30,7 @@ public class MyClassLoader extends ClassLoader {
     return findSystemClass(name);
   }
   public Class<?> defineClass(String name, byte[] b) throws Throwable {
+    Logger.info("Registering {0}.", name);
     Class<?> definition = defineClass(name, b, 0, b.length);
     map.put(name, definition);
     return definition;
