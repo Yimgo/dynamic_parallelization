@@ -52,7 +52,6 @@ public class ClassPimp {
             }
           }
 
-          /* static analysis */
           Map.Entry<AbstractInsnNode, AbstractInsnNode> independantBlock = staticAnalysis(cn, mn, beforeLoop, loopStart, loopEnd, afterLoop);
           List<Object> localTypes = resolveLocalTypes(cn, mn, beforeLoop);
 
@@ -60,14 +59,10 @@ public class ClassPimp {
           registerClass(generateInnerClass(cn, mn, loopStart, loopEnd, localTypes));
 
           removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, independantBlock);
-          // add futures in initialization
           addFuturesArray(mn, beforeLoop);
-          // dumping context
           dumpLocalsToList(mn, beforeLoop);
           adaptFrameAppend(cn, mn, beforeLoop, localTypes);
-          // replace inner loop code by calls to innerClass.call()
           replaceInnerCode(cn, mn, loopStart, loopEnd);
-          // manage futures after the loop
           adaptAfterCode(mn, afterLoop, localTypes);
 
           // consistency check
@@ -290,6 +285,20 @@ public class ClassPimp {
     return innerClass;
   }
 
+  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> keepBlock) {
+    Logger.info("Removing old inner code");
+
+    ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
+    it.next();
+
+    while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
+      AbstractInsnNode ain = it.next();
+      if (keepBlock != null && (mn.instructions.indexOf(ain) < mn.instructions.indexOf(keepBlock.getKey()) || mn.instructions.indexOf(ain) > mn.instructions.indexOf(keepBlock.getValue()))) {
+        it.remove();
+      }
+    }
+  }
+
   public void addFuturesArray(MethodNode mn, AbstractInsnNode beforeLoop) {
     Logger.info("Adding futures array to {0}()", mn.name);
 
@@ -338,22 +347,6 @@ public class ClassPimp {
     newLocal.add("java/util/List");
     it.set(new FrameNode(Opcodes.F_FULL, newLocal.size(), newLocal.toArray(), 0, new Object[] {}));
 
-  }
-
-
-
-  public void removeInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode beforeLoop, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, Map.Entry<AbstractInsnNode, AbstractInsnNode> keepBlock) {
-    Logger.info("Removing old inner code");
-
-    ListIterator<AbstractInsnNode> it = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
-    it.next();
-
-    while (it.hasNext() && it.nextIndex() < mn.instructions.indexOf(loopEnd)) {
-      AbstractInsnNode ain = it.next();
-      if (keepBlock != null && (mn.instructions.indexOf(ain) < mn.instructions.indexOf(keepBlock.getKey()) || mn.instructions.indexOf(ain) > mn.instructions.indexOf(keepBlock.getValue()))) {
-        it.remove();
-      }
-    }
   }
 
   public void replaceInnerCode(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd) {
