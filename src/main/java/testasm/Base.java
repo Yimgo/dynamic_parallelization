@@ -1,14 +1,20 @@
 package testasm;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.multiverse.api.references.*;
+import org.multiverse.api.collections.*;
 import static org.multiverse.api.StmUtils.*;
+import static org.multiverse.api.GlobalStmInstance.getGlobalStmInstance;
 
 import org.pmw.tinylog.Logger;
 
@@ -18,60 +24,80 @@ public class Base {
     this.pool = pool;
   }
   public void doRun() throws Throwable {
-    List<Object> frame = new ArrayList<Object>();
-    Integer count = 100000;
+    Integer count = 10000;
+    Future<Integer>[] futures = new Future[count];
+    Transaction[] transactions = new Transaction[count];
     List<Integer> integers = new ArrayList<Integer>(IntStream.range(0, count).boxed().collect(Collectors.toList()));
     Integer sum = 0;
     Integer i = 0;
+    List<Object> frame = new ArrayList<Object>();
+
     frame.add(this);
     frame.add(count);
     frame.add(integers);
     frame.add(sum);
     frame.add(i);
 
-    for (; i < count; ++i) {
-      Class<?> innerClass = ClassLoader.getSystemClassLoader().loadClass("testasm.Base$Proxy");
-      Runnable innerInstance = (Runnable) innerClass.getConstructor(Class.forName("java.util.List")).newInstance(frame);
-      atomic(innerInstance);
-      //Class<?> innerClass = ClassLoader.getSystemClassLoader().loadClass("testasm.Base$Inner");
-      //Runnable innerInstance = (Runnable) innerClass.getConstructor(Class.forName("java.util.List")).newInstance(frame);
-      //pool.submit(innerInstance);
+    SpeculativeList speculativeFrame = new SpeculativeList(frame, count);
+
+    int done = -1, retries = 0;
+
+    while (done < count - 1 && retries < 10) {
+      for (int j = done + 1; j < count; j += 1) {
+        Class<?> innerClass = ClassLoader.getSystemClassLoader().loadClass("testasm.Base$Inner");
+        Callable<Integer> innerInstance = (Callable) innerClass.getConstructor(Class.forName("java.lang.Integer"), Class.forName("testasm.SpeculativeList")).newInstance(Integer.valueOf(j), speculativeFrame);
+        futures[j] = pool.submit(innerInstance);
+      }
+
+      for (int j = 0; j < count; j += 1) {
+        int ret = futures[j].get();
+        if (ret < j) {
+          Logger.trace("Respawning threads from {0} to {1}.", done + 1, count);
+          //return;
+          done = ret;
+          for (int k = done + 1; k < count; k += 1) {
+            try {
+              futures[k].cancel(true);
+              futures[k].get();
+            } catch (Throwable t) {
+              // do nothing
+            }
+            futures[k] = null;
+          }
+          retries += 1;
+          speculativeFrame.clearVectors();
+          speculativeFrame.rollback(done);
+          break;
+        } else {
+          done = j;
+        }
+      }
     }
 
-    int expected = (count - 1) * count / 2;
-    if (((Integer) frame.get(3)).intValue() == expected) {
+    int expected = count;
+    if (((Integer) speculativeFrame.list().get(4)).intValue() == expected) {
       Logger.trace("OK");
     } else {
-      Logger.trace("NOK: got {0} while expected {1}", frame.get(3), expected);
+      Logger.trace("NOK: got {0} while expected {1}", frame.get(4), expected);
     }
   }
 }
 
-class Base$Proxy implements Runnable {
-  private List<Object> frame;
-  public Base$Proxy(List<Object> f) {
+class Base$Inner implements Callable<Integer> {
+  private Integer id;
+  private SpeculativeList frame;
+  public Base$Inner(Integer id, SpeculativeList f) {
+    this.id = id;
     frame = f;
   }
-  public void run() {
+  public Integer call() {
     try {
-      Class<?> innerClass = ClassLoader.getSystemClassLoader().loadClass("testasm.Base$Inner");
-      Runnable innerInstance = (Runnable) innerClass.getConstructor(Class.forName("java.util.List")).newInstance(frame);
-      atomic(innerInstance);
-    } catch(Throwable t) {
-      Logger.error(t);
-    }
-  }
-}
-
-class Base$Inner implements Runnable {
-  private List<Object> frame;
-  public Base$Inner(List<Object> f) {
-    frame = f;
-  }
-  public void run() {
-    if ((Integer) frame.get(4) < (Integer) frame.get(1)) {
-      frame.set(3, (Integer) frame.get(3) + ((List<Integer>) frame.get(2)).get((Integer) frame.get(4)));
-      frame.set(4, (Integer) frame.get(4) + 1);
+      frame.speculativeStore(id, 4, ((Integer) frame.speculativeLoad(id, 4)) + 1);
+      return id;
+    } catch (Throwable t) {
+      Logger.trace("Fiber {0} failed.", id);
+      //Logger.trace(t);
+      return id - 1;
     }
   }
 }
