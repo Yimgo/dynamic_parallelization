@@ -23,7 +23,7 @@ function disassemble {
 if [[ -n "${1}" ]]; then
   disassemble "${1}"
 else
-  readonly classes=("Base.class" "Base\$Inner.class" "Base\$Proxy.class")
+  readonly classes=("Base.class" "Base\$Inner.class")
   for i in "${classes[@]}";
   do
     echo "Disassembling ${i}..."

@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.*;
+import static org.objectweb.asm.Opcodes.*;
 
 import org.pmw.tinylog.Logger;
 
@@ -55,10 +56,10 @@ public class ClassPimp {
           Map.Entry<AbstractInsnNode, AbstractInsnNode> independantBlock = staticAnalysis(cn, mn, beforeLoop, loopStart, loopEnd, afterLoop);
           List<Object> localTypes = resolveLocalTypes(cn, mn, beforeLoop);
 
-          registerClass(generateProxyClass(cn));
           registerClass(generateInnerClass(cn, mn, loopStart, loopEnd, localTypes));
 
-          removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, independantBlock);
+
+          /*removeInnerCode(cn, mn, beforeLoop, loopStart, loopEnd, independantBlock);
           addFuturesArray(mn, beforeLoop);
           dumpLocalsToList(mn, beforeLoop);
           adaptFrameAppend(cn, mn, beforeLoop, localTypes);
@@ -71,7 +72,7 @@ public class ClassPimp {
           ExecutorService pool = Executors.newFixedThreadPool(2);
           pimped.getDeclaredField("pool").set(pimpedInstance, pool);
           Logger.trace(pimped.getMethod(methodName, Integer.class).invoke(pimpedInstance, 5));
-          pool.shutdown();
+          pool.shutdown();*/
         } catch (Throwable t) {
           Logger.error(t);
         }
@@ -163,110 +164,70 @@ public class ClassPimp {
     return null;
   }
 
-  public ClassNode generateProxyClass(ClassNode cn) {
-    Logger.info("Generating {0}$Proxy.", cn.name);
-
-    ClassNode proxyClass = new ClassNode();
-    // class properties
-    proxyClass.version = Opcodes.V1_8;
-    proxyClass.access = Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER;
-    proxyClass.name = cn.name + "$Proxy";
-    proxyClass.superName = "java/lang/Object";
-    proxyClass.interfaces.add("java/lang/Runnable");
-    proxyClass.fields.add(new FieldNode(Opcodes.ACC_PRIVATE, "frame", "Ljava/util/List;", "Ljava/util/List<Ljava/lang/Object;>;", null));
-
-    // constructor
-    // this.frame = f;
-    MethodNode constructor = new MethodNode(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/util/List;)V", "(Ljava/util/List<Ljava/lang/Object;>;)V", null);
-    constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    constructor.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
-    constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    constructor.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, proxyClass.name, "frame", "Ljava/util/List;"));
-    constructor.instructions.add(new InsnNode(Opcodes.RETURN));
-    constructor.maxStack = 2;
-    constructor.maxLocals = 2;
-    proxyClass.methods.add(constructor);
-
-    // run
-    // Class<?> innerClass = testasm.MyClassLoader.getInstance().loadClass("Base$Inner");
-    // Runnable innerInstance = (Runnable) innerClass.getConstructor(Class.forName("java.util.List")).newInstance(this.frame);
-    // atomic(innerInstance);
-    MethodNode runMethod = new MethodNode(Opcodes.ACC_PUBLIC, "run", "()V", null, null);
-    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "testasm/MyClassLoader", "getInstance", "()Ltestasm/MyClassLoader;", false));
-    runMethod.instructions.add(new LdcInsnNode(cn.name.replace("/", ".") + "$Inner"));
-    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "testasm/MyClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;", false));
-    runMethod.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-    runMethod.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    runMethod.instructions.add(new InsnNode(Opcodes.ICONST_1));
-    runMethod.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Class"));
-    runMethod.instructions.add(new InsnNode(Opcodes.DUP));
-    runMethod.instructions.add(new InsnNode(Opcodes.ICONST_0));
-    runMethod.instructions.add(new LdcInsnNode("java.util.List"));
-    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false));
-    runMethod.instructions.add(new InsnNode(Opcodes.AASTORE));
-    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getConstructor", "([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;", false));
-    runMethod.instructions.add(new InsnNode(Opcodes.ICONST_1));
-    runMethod.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/Object"));
-    runMethod.instructions.add(new InsnNode(Opcodes.DUP));
-    runMethod.instructions.add(new InsnNode(Opcodes.ICONST_0));
-    runMethod.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-    runMethod.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, proxyClass.name, "frame", "Ljava/util/List;"));
-    runMethod.instructions.add(new InsnNode(Opcodes.AASTORE));
-    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;", false));
-    runMethod.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/lang/Runnable"));
-    runMethod.instructions.add(new VarInsnNode(Opcodes.ASTORE, 2));
-    runMethod.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
-    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/multiverse/api/StmUtils", "atomic", "(Ljava/lang/Runnable;)V", false));
-    runMethod.instructions.add(new InsnNode(Opcodes.RETURN));
-    runMethod.maxLocals = 3;
-    runMethod.maxStack = 5;
-    proxyClass.methods.add(runMethod);
-
-    return proxyClass;
-  }
-
   public ClassNode generateInnerClass(ClassNode cn, MethodNode mn, AbstractInsnNode loopStart, AbstractInsnNode loopEnd, List<Object> localTypes) {
     Logger.info("Generating {0}$Inner.", cn.name);
 
     ClassNode innerClass = new ClassNode();
+
     // class properties
     innerClass.version = Opcodes.V1_8;
     innerClass.access = Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER;
     innerClass.name = cn.name + "$Inner";
     innerClass.superName = "java/lang/Object";
-    innerClass.interfaces.add("java/lang/Runnable");
-    innerClass.fields.add(new FieldNode(Opcodes.ACC_PRIVATE, "frame", "Ljava/util/List;", "Ljava/util/List<Ljava/lang/Object;>;", null));
+    innerClass.signature = "Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/Integer;>;";
+    innerClass.interfaces.add("java/util/concurrent/Callable");
+    // private java.lang.Integer id;
+    innerClass.fields.add(new FieldNode(Opcodes.ACC_PRIVATE, "id", "Ljava/lang/Integer;", null, null));
+    // private testasm.SpeculativeList frame;
+    innerClass.fields.add(new FieldNode(Opcodes.ACC_PRIVATE, "frame", "Ltestasm/SpeculativeList;", null, null));
 
     // constructor
-    // this.frame = frame;
-    MethodNode constructor = new MethodNode(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/util/List;)V", "(Ljava/util/List<Ljava/lang/Object;>;)V", null);
+    MethodNode constructor = new MethodNode(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/lang/Integer;Ltestasm/SpeculativeList;)V", null, null);
+
     constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     constructor.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
     constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-    constructor.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, innerClass.name, "frame", "Ljava/util/List;"));
+    constructor.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, innerClass.name, "id", "Ljava/lang/Integer;"));
+    constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    constructor.instructions.add(new VarInsnNode(Opcodes.ALOAD, 2));
+    constructor.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, innerClass.name, "frame", "Ltestasm/SpeculativeList;"));
     constructor.instructions.add(new InsnNode(Opcodes.RETURN));
+
     constructor.maxStack = 2;
-    constructor.maxLocals = 2;
+    constructor.maxLocals = 3;
+
     innerClass.methods.add(constructor);
 
-    // run()
-    /*
-      Put the frame in the variable frame because it is very likely that we will re-use it later.
-      It will be used to load and store the locals.
-     */
-    MethodNode runMethod = new MethodNode(Opcodes.ACC_PUBLIC, "run", "()V", null, null);
+    // synthetic
+    MethodNode synthetic = new MethodNode(Opcodes.ACC_PUBLIC + Opcodes.ACC_BRIDGE + Opcodes.ACC_SYNTHETIC, "call", "()Ljava/lang/Object;", null, new String[] { "java/lang/Exception" });
+
+    synthetic.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    synthetic.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, innerClass.name, "call", "()Ljava/lang/Integer;", false));
+    synthetic.instructions.add(new InsnNode(Opcodes.ARETURN));
+
+    synthetic.maxStack = 1;
+    synthetic.maxLocals = 1;
+
+    innerClass.methods.add(synthetic);
+
+    // call
+    MethodNode runMethod = new MethodNode(Opcodes.ACC_PUBLIC, "call", "()Ljava/lang/Integer;", null, null);
+
+    LabelNode l0 = new LabelNode(new Label());
+    LabelNode l1 = new LabelNode(new Label());
+    LabelNode l2 = new LabelNode(new Label());
+    runMethod.tryCatchBlocks.add(new TryCatchBlockNode(l0, l1, l2, "java/lang/Throwable"));
+
+    runMethod.instructions.add(l0);
     runMethod.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
     runMethod.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, innerClass.name, "frame", "Ljava/util/List;"));
     runMethod.instructions.add(new VarInsnNode(Opcodes.ASTORE, 1));
-    ListIterator<AbstractInsnNode> i = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
-    i.next();
-    while (i.hasNext() && i.nextIndex() < mn.instructions.indexOf(loopEnd)) {
-      AbstractInsnNode ain = i.next();
-      /*
-       Translate the instruction if it accesses the variables frame or copy it otherwise.
-       */
+
+    ListIterator<AbstractInsnNode> lit = mn.instructions.iterator(mn.instructions.indexOf(loopStart));
+    lit.next();
+    while (lit.hasNext() && lit.nextIndex() < mn.instructions.indexOf(loopEnd)) {
+      AbstractInsnNode ain = lit.next();
       if (ain instanceof VarInsnNode) {
         try {
           runMethod.instructions.add(varNodeToList((VarInsnNode) ain, 1, localTypes));
@@ -277,9 +238,25 @@ public class ClassPimp {
         runMethod.instructions.add(ain.clone(null));
       }
     }
-    runMethod.instructions.add(new InsnNode(Opcodes.RETURN));
+
+    runMethod.instructions.add(l1);
+    runMethod.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    runMethod.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, innerClass.name, "id", "Ljava/lang/Integer;"));
+    runMethod.instructions.add(new InsnNode(Opcodes.ARETURN));
+
+    runMethod.instructions.add(l2);
+    runMethod.instructions.add(new FrameNode(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/Throwable"}));
+    runMethod.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+    runMethod.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, innerClass.name, "id", "Ljava/lang/Integer;"));
+    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false));
+    runMethod.instructions.add(new InsnNode(Opcodes.ICONST_1));
+    runMethod.instructions.add(new InsnNode(Opcodes.ISUB));
+    runMethod.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false));
+    runMethod.instructions.add(new InsnNode(Opcodes.ARETURN));
+
     runMethod.maxStack = mn.maxStack > 3 ? mn.maxStack : 3;
-    runMethod.maxLocals = 2;
+    runMethod.maxLocals = 3;
+
     innerClass.methods.add(runMethod);
 
     return innerClass;
